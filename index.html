@@ -225,9 +225,9 @@
         box-shadow: none;
     }
 
-    .card-wrapper { perspective: 1200px; margin: 10px 0 22px; position: relative; }
+    .card-wrapper { perspective: 1200px; margin: -8px 0 22px; position: relative; }
     .card {
-        position: relative; width: 100%; padding-top: 92%;
+        position: relative; width: 100%; padding-top: 112%;
         transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         transform-style: preserve-3d;
         cursor: pointer;
@@ -367,6 +367,9 @@
     .card-back .flip-hint-back svg { width: 24px; height: 24px; fill: currentColor; }
 
     .nav { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+    /* 上一页/下一页箭头外移，与随机按钮拉开间距防误触 */
+    .nav #prevBtn { margin-right: 26px; }
+    .nav #nextBtn { margin-left: 26px; }
     .nav button {
         border: 1px solid rgba(63, 123, 184, 0.55);
         width: 48px; height: 48px; border-radius: 50%;
