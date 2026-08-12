@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>初中考纲词组 · 闪卡</title>
+
+<!-- ============ PWA / iOS 支持 ============ -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="考纲词组闪卡" />
+<meta name="theme-color" content="#7fb0e0" />
+<meta name="description" content="初中考纲词组 · 347 个高频词组，英译中 / 中译英双模式翻转闪卡，即点即学。" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+
+<style>
+    /* ============ 全局重置 ============ */
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; touch-action: manipulation; }
+    html { min-height: 100%; }
+    body {
+        min-height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+        color: #2d2d44;
+        transition: background 0.45s ease;
+        background-attachment: fixed;
+        -webkit-background-attachment: fixed;
+        padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+        -webkit-font-smoothing: antialiased;
+    }
+    /* 首页 & 闪卡页背景：白底蓝色点阵（JS 加载后由 setBg 覆盖，保持一致） */
+    body.home, body.passage {
+        background-color: #ffffff;
+        background-image: radial-gradient(rgba(70, 130, 190, 0.30) 1.6px, transparent 1.6px);
+        background-size: 24px 24px;
+    }
+
+    /* ============ 通用玻璃面板 ============ */
+    .panel {
+        width: 100%;
+        max-width: 700px;
+        margin: auto;
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border-radius: 44px;
+        border: 1.5px solid rgba(70, 130, 190, 0.30);
+        box-shadow: 0 10px 24px -14px rgba(20, 45, 80, 0.18);
+        padding: 34px 28px 40px;
+    }
+
+    /* ============ 视图切换 ============ */
+    .view { display: none; }
+    .view.active {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100dvh - 32px);
+        padding-bottom: 4vh;
+        animation: fadeUp .35s ease;
+    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+    /* =========================================================
+       首页
+       ========================================================= */
+    .home-panel { padding: 38px 24px 44px; text-align: center; }
+    .home-title {
+        font-size: clamp(30px, 7.5vw, 44px);
+        font-weight: 800;
+        letter-spacing: 2px;
+        background: linear-gradient(135deg, #2e5f96 0%, #6ea3d6 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1.25;
+    }
+    .home-sub {
+        display: inline-flex; align-items: center; gap: 8px;
+        margin-top: 10px;
+        font-size: 13.5px; font-weight: 600; letter-spacing: 2px;
+        color: rgba(46, 95, 150, 0.55);
+        background: rgba(46, 95, 150, 0.05);
+        border: 1px solid rgba(46, 95, 150, 0.14);
+        padding: 6px 18px; border-radius: 60px;
+        backdrop-filter: blur(4px);
+    }
+    .home-stats {
+        margin-top: 18px;
+        font-size: 14px; color: rgba(30, 65, 105, 0.72); letter-spacing: 1px;
+    }
+    .home-stats b { font-weight: 700; color: #2e5f96; }
+
+    /* 分组按钮（双列平面风格，REVIEW 全宽） */
+    .grid { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .p-btn {
+        position: relative;
+        border: 1px solid rgba(63, 123, 184, 0.55);
+        border-radius: 18px;
+        padding: 16px 18px 15px;
+        text-align: center;
+        cursor: pointer;
+        color: #1d4e80;
+        background: #ffffff;
+        box-shadow: none;
+        transition: background 0.2s ease, transform 0.15s ease;
+        text-decoration: none;
+        display: block;
+    }
+    .p-btn:active { transform: scale(0.97); }
+    .p-btn .p-no { font-size: 17px; font-weight: 800; letter-spacing: 1px; }
+    .p-btn .p-count { display: block; margin-top: 4px; font-size: 12.5px; opacity: 0.9; }
+    .p-btn .p-go {
+        position: absolute; top: 50%; right: 16px; transform: translateY(-50%);
+        width: 26px; height: 26px; border-radius: 50%;
+        background: #ffffff;
+        border: 1px solid rgba(63, 123, 184, 0.45);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px; line-height: 1;
+    }
+    /* REVIEW 按钮：品牌浅蓝，全宽 */
+    .p-btn-review {
+        grid-column: 1 / -1;
+        background: #3f7ab8;
+        color: #fff;
+        border-color: #3f7ab8;
+    }
+    .p-btn-review .p-go { background: rgba(255, 255, 255, 0.30); }
+
+    /* =========================================================
+       闪卡页（主题变量由 JS 注入）
+       ========================================================= */
+    .back-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 0 2px; }
+    .back-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 40px; height: 40px;
+        border: 1px solid rgba(63, 123, 184, 0.55);
+        cursor: pointer;
+        background: #ffffff;
+        color: #1d4e80;
+        font-size: 20px; font-weight: 600;
+        padding: 0; border-radius: 50%;
+        box-shadow: none;
+        transition: transform .15s ease;
+    }
+    .back-btn:active { transform: scale(0.94); }
+    .back-btn .arr { font-size: 18px; line-height: 1; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 0 4px; gap: 10px; }
+    .header h1 {
+        font-size: clamp(20px, 5.4vw, 28px);
+        font-weight: 700; letter-spacing: 2px;
+        color: var(--accent, #35689f);
+        background: linear-gradient(135deg, var(--c2, #7fa8d8), var(--c1, #35689f));
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .header .counter {
+        flex-shrink: 0;
+        font-size: 15px; font-weight: 600; color: #1d4e80;
+        background: #ffffff;
+        border: 1px solid rgba(63, 123, 184, 0.45);
+        padding: 6px 15px; border-radius: 40px;
+        box-shadow: none;
+    }
+    .header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    /* REVIEW 分享导出按钮 */
+    .share-btn {
+        width: 34px; height: 34px; border-radius: 50%;
+        border: 1px solid rgba(63, 123, 184, 0.55);
+        cursor: pointer;
+        background: #ffffff;
+        color: #1d4e80;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: none;
+        transition: transform .15s ease, opacity .2s ease;
+    }
+    .share-btn:active { transform: scale(0.9); }
+    .share-btn.disabled { opacity: 0.4; pointer-events: none; }
+    .share-btn svg { width: 17px; height: 17px; fill: currentColor; }
+    /* GO 按钮：绿底白字，与 GO 复习闪卡绿色主题呼应 */
+    .go-btn {
+        border: 1px solid #6fae8e;
+        cursor: pointer;
+        background: #6fae8e;
+        color: #ffffff;
+        font-size: 15px; font-weight: 600;
+        padding: 8px 16px; border-radius: 60px;
+        box-shadow: none;
+        transition: transform .15s ease, opacity .2s ease;
+    }
+    .go-btn:active { transform: scale(0.94); }
+    .go-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+    /* 英译中 / 中译英 模式切换 */
+    .mode-switch {
+        display: flex; justify-content: center; gap: 4px;
+        margin: 0 auto 16px;
+        padding: 4px;
+        width: fit-content;
+        background: #ffffff;
+        border: 1px solid rgba(63, 123, 184, 0.45);
+        border-radius: 60px;
+    }
+    .ms-btn {
+        border: none; background: transparent;
+        padding: 8px 24px; border-radius: 40px;
+        font-size: 14.5px; font-weight: 600;
+        color: #1d4e80;
+        cursor: pointer;
+        transition: all .2s ease;
+        letter-spacing: 1px;
+    }
+    .ms-btn.active {
+        background: #3f7ab8;
+        color: #fff;
+        box-shadow: none;
+    }
+
+    .card-wrapper { perspective: 1200px; margin: 10px 0 22px; position: relative; }
+    .card {
+        position: relative; width: 100%; padding-top: 92%;
+        transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        transform-style: preserve-3d;
+        cursor: pointer;
+    }
+    .card.flipped { transform: rotateY(180deg); }
+    .card-face {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        border-radius: 26px;
+        backface-visibility: hidden; -webkit-backface-visibility: hidden;
+        display: flex; flex-direction: column;
+        padding: 30px 26px;
+        background: var(--cardBg, #f5faff);
+        box-shadow: 0 8px 18px -10px var(--glow, rgba(47,95,158,0.18));
+        border: 1px solid rgba(70, 130, 190, 0.18);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    /* 安全垂直居中：内容少时居中；内容超高时顶部对齐可完整滚动 */
+    .card-face::before,
+    .card-face::after {
+        content: '';
+        flex: 0 0 auto;
+        margin: auto;
+    }
+    .card-front { align-items: center; text-align: center; }
+    .card-front .word {
+        font-size: clamp(40px, 10vw, 68px);
+        font-weight: 700; color: #1a1a2e; letter-spacing: 1px;
+        line-height: 1.25; margin-bottom: 6px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    .card-front .word.long { font-size: clamp(24px, 6vw, 48px); letter-spacing: 0; }
+    .card-front .word.very-long { font-size: clamp(18px, 5vw, 36px); letter-spacing: 0; }
+    /* 中译英模式：正面是中文释义，字号适当缩小 */
+    .card-front .word.zh {
+        font-size: clamp(28px, 6.5vw, 46px);
+        line-height: 1.4;
+    }
+    .card-front .speak-btn {
+        margin-top: 8px;
+        background: #ffffff;
+        border: 1px solid rgba(63, 123, 184, 0.55);
+        border-radius: 60px; padding: 10px 26px;
+        font-size: 17px; font-weight: 600; color: #1d4e80;
+        display: inline-flex; align-items: center; gap: 10px; cursor: pointer;
+        transition: transform .18s ease, background .2s ease;
+    }
+    .card-front .speak-btn:active { transform: scale(0.94); }
+    .card-front .speak-btn svg { width: 22px; height: 22px; fill: currentColor; }
+    .card-front .flip-hint {
+        position: absolute; bottom: 16px; right: 26px;
+        color: var(--hint, #7fa8d8); opacity: 0.75;
+        display: inline-flex; align-items: center; justify-content: center;
+        padding: 0;
+    }
+    .card-front .flip-hint svg { width: 24px; height: 24px; fill: currentColor; }
+
+    /* 收藏 "+" 按钮（卡片右上角，无背景无边框，仅符号） */
+    .add-btn {
+        position: absolute; top: 14px; right: 14px; z-index: 6;
+        width: 42px; height: 42px; border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        background: transparent;
+        color: #3f7ab8;
+        font-size: 30px; font-weight: 500; line-height: 1;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: none;
+        transition: transform .18s ease, color .2s ease;
+    }
+    .add-btn:active { transform: scale(0.9); }
+    .add-btn.added {
+        background: transparent;
+        color: #3f7ab8;
+        border: none;
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .card-back { transform: rotateY(180deg); align-items: flex-start; text-align: left; gap: 7px; }
+    .card-back .back-word { font-size: 16.5px; font-weight: 600; color: #5b7899; margin-bottom: 2px; }
+    /* 背面：中文释义放大加粗并居中 */
+    .card-back .detail .content#meaningDisplay {
+        font-size: clamp(22px, 6.2vw, 30px);
+        font-weight: 700;
+        color: #1a2a44;
+        text-align: center;
+        padding: 8px 2px 10px;
+        line-height: 1.5;
+    }
+    .card-back .detail { width: 100%; margin-bottom: 5px; }
+    .card-back .detail .label {
+        font-size: 12.5px; font-weight: 700; color: var(--accent, #35689f);
+        text-transform: uppercase; letter-spacing: 0.8px;
+        background: var(--label-bg, rgba(47,95,158,0.08));
+        display: inline-block; padding: 2px 10px; border-radius: 8px; margin-bottom: 4px;
+    }
+    .card-back .detail .content { font-size: 15.5px; line-height: 1.6; color: #2d2d44; padding-left: 2px; }
+    .card-back .detail .content .example-en { font-style: normal; color: #2d2d44; font-size: 17px; line-height: 1.7; }
+    .card-back .detail .content .example-en .highlight { color: #e8940a; font-weight: 700; font-style: normal; }
+    .card-back .detail .content .example-zh { color: #4f6a8c; font-size: 15.5px; line-height: 1.65; }
+    /* 背面：同义内容放大加粗 */
+    .card-back .detail .content#synonymDisplay {
+        font-size: 19px;
+        font-weight: 700;
+        color: #1a2a44;
+        letter-spacing: 0.2px;
+    }
+    /* ZH（中译英）翻转面：格式调换 —— 英文词组放大加粗居中，中文释义缩小为提示
+       注：.card-back 为 flex column + align-items:flex-start，flex 子项宽度收缩为内容宽，
+       text-align:center 对收缩宽度元素无效；必须 align-self:stretch 占满宽度才能真正居中 */
+    .card-back.zh .back-word {
+        align-self: stretch;
+        width: 100%;
+        font-size: clamp(24px, 6.8vw, 34px);
+        font-weight: 700;
+        color: #1a2a44;
+        text-align: center;
+        padding: 8px 2px 10px;
+        line-height: 1.5;
+    }
+    .card-back.zh .detail .content#meaningDisplay {
+        font-size: 16.5px;
+        font-weight: 600;
+        color: #5b7899;
+        text-align: left;
+        padding: 0 2px 2px;
+        line-height: 1.5;
+    }
+    .card-back .flip-hint-back {
+        position: absolute; bottom: 16px; right: 26px;
+        color: var(--hint, #7fa8d8); opacity: 0.75;
+        display: inline-flex; align-items: center; justify-content: center;
+        padding: 0;
+    }
+    .card-back .flip-hint-back svg { width: 24px; height: 24px; fill: currentColor; }
+
+    .nav { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+    .nav button {
+        border: 1px solid rgba(63, 123, 184, 0.55);
+        width: 48px; height: 48px; border-radius: 50%;
+        font-size: 18px; font-weight: 600; cursor: pointer;
+        background: #ffffff; color: #1d4e80;
+        box-shadow: none;
+        display: inline-flex; align-items: center; justify-content: center;
+        letter-spacing: 0;
+        transition: transform .15s ease, background .2s ease;
+    }
+    .nav button .btn-icon { font-size: 16px; line-height: 1; }
+    .nav button.primary { width: auto; padding: 0 22px; border-radius: 60px; }
+    .nav button:active { transform: scale(0.94); }
+    .nav button.primary {
+        background: #3f7ab8;
+        color: #fff; border: 2px solid #3f7ab8;
+        box-shadow: none;
+    }
+    .nav .btn-icon { font-size: 18px; line-height: 1; }
+
+    .card-face::-webkit-scrollbar { width: 4px; }
+    .card-face::-webkit-scrollbar-track { background: transparent; }
+    .card-face::-webkit-scrollbar-thumb { background: var(--scroll, #a8c6e8); border-radius: 10px; }
+
+    /* =========================================================
+       REVIEW 收藏页
+       ========================================================= */
+    .review-panel { padding: 30px 24px 40px; }
+    .review-panel .header h1 {
+        background: linear-gradient(135deg, #7fb0e0 0%, #2e5f96 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: #2e5f96;
+    }
+    .review-panel .header .counter {
+        color: #2e5f96;
+    }
+    .review-list { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; width: 100%; }
+    .r-item {
+        display: flex; align-items: center; gap: 12px;
+        background: #ffffff;
+        border: 1px solid rgba(63, 123, 184, 0.45);
+        border-radius: 16px;
+        padding: 14px 14px 14px 18px;
+        box-shadow: none;
+        cursor: pointer;
+        transition: transform .15s ease;
+    }
+    .r-item:active { transform: scale(0.98); }
+    .r-info { flex: 1; min-width: 0; }
+    .r-word { font-size: 18px; font-weight: 700; color: #1a1a2e; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+    .r-tag { font-size: 12px; font-weight: 600; color: #fff; background: #4a86c8; border-radius: 20px; padding: 1px 9px; }
+    .r-meaning { font-size: 13.5px; color: #4f6a8c; margin-top: 3px; line-height: 1.5;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .r-del {
+        flex-shrink: 0;
+        width: 36px; height: 36px; border-radius: 50%;
+        border: none; cursor: pointer;
+        background: transparent;
+        color: #9aabc0;
+        font-size: 26px; font-weight: 400; line-height: 1;
+        display: flex; align-items: center; justify-content: center;
+        transition: transform .15s ease, color .2s ease;
+    }
+    .r-del:active { transform: scale(0.88); }
+    .review-empty {
+        margin-top: 40px; text-align: center;
+        color: rgba(46, 95, 150, 0.55);
+        font-size: 15px; line-height: 2; letter-spacing: 1px;
+    }
+    .review-empty .big { font-size: 44px; display: block; margin-bottom: 10px; }
+
+    /* ============ 响应式 ============ */
+    @media (max-width: 560px) {
+        body { padding: calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px); }
+        .panel { border-radius: 32px; padding: 22px 16px 28px; }
+        .home-panel { padding: 28px 14px 34px; }
+        .grid { gap: 10px; margin-top: 22px; }
+        .p-btn { padding: 15px 16px 14px; }
+        .card-face { padding: 22px 18px; }
+        .card-front .word { font-size: 46px; }
+        .card-front .word.zh { font-size: 30px; }
+        .card-back .detail .content { font-size: 14px; }
+        .nav button { width: 42px; height: 42px; font-size: 16px; }
+        .nav button.primary { width: auto; padding: 0 16px; }
+        .nav { gap: 8px; }
+        .card-front .flip-hint, .card-back .flip-hint-back { bottom: 10px; right: 18px; }
+        .card-front .speak-btn { padding: 8px 18px; font-size: 15px; }
+        .header { margin-bottom: 12px; }
+        .mode-switch { margin-bottom: 12px; }
+        .ms-btn { padding: 7px 18px; font-size: 13.5px; }
+        .review-panel { padding: 22px 14px 28px; }
+        .add-btn { width: 38px; height: 38px; font-size: 23px; top: 12px; right: 12px; }
+    }
+    @media (max-width: 390px) {
+        .panel { border-radius: 26px; padding: 18px 12px 24px; }
+        .card-front .word { font-size: 38px; }
+        .card-front .word.zh { font-size: 26px; }
+        .nav button { width: 38px; height: 38px; font-size: 15px; }
+        .nav button.primary { width: auto; padding: 0 14px; }
+        .ms-btn { padding: 6px 14px; font-size: 13px; }
+    }
+
+    /* =========================================================
+       GO 复习闪卡绿色主题覆盖（仅 body.review-go 生效，
+       由 openReviewFlash() 注入；DAY 闪卡页不受影响）
+       ========================================================= */
+    body.review-go .panel { background: #ffffff; border-color: rgba(111, 174, 142, 0.30); }
+    body.review-go .app-shell { border-color: rgba(111, 174, 142, 0.30); }
+    body.review-go .mode-switch { border-color: rgba(111, 174, 142, 0.45); }
+    body.review-go .ms-btn { color: #2e6b4f; }
+    body.review-go .ms-btn.active { background: #6fae8e; color: #fff; }
+    body.review-go .card-face { border-color: transparent; box-shadow: 0 8px 18px -10px rgba(60, 100, 75, 0.18); }
+    body.review-go .card-front .speak-btn { border-color: rgba(111, 174, 142, 0.55); color: #2e6b4f; }
+    body.review-go .add-btn { color: #6fae8e; }
+    body.review-go .add-btn.added { color: #6fae8e; }
+    body.review-go .nav button { border-color: rgba(111, 174, 142, 0.55); color: #2e6b4f; }
+    body.review-go .nav button.primary { background: #6fae8e; border-color: #6fae8e; color: #fff; }
+    /* GO 闪卡页：右上统计数字 / 左上返回箭头圆框 → 绿色 */
+    body.review-go .header .counter { color: #2e6b4f; border-color: rgba(111, 174, 142, 0.45); }
+    body.review-go .back-btn { color: #2e6b4f; border-color: rgba(111, 174, 142, 0.55); }
+</style>
+</head>
+<body class="home">
+
+<!-- ================= 首页 ================= -->
+<section id="homeView" class="view active">
+    <div class="panel home-panel">
+        <h1 class="home-title">初中考纲词组</h1>
+        <span class="home-sub">中 考 必 备 · 高 频 词 组</span>
+        <div class="home-stats"><b id="statWords">347</b> 个词组</div>
+        <div class="grid" id="dayGrid"></div>
+    </div>
+</section>
+
+<!-- ================= 闪卡页 ================= -->
+<section id="passageView" class="view">
+    <div class="panel">
+        <div class="back-bar">
+            <button class="back-btn" id="backBtn" aria-label="返回"><span class="arr">‹</span></button>
+        </div>
+        <div class="header">
+            <h1 id="passageTitle">📘 DAY 1</h1>
+            <span class="counter" id="progressDisplay">1 / 20</span>
+        </div>
+
+        <!-- 模式切换：英译中 / 中译英 -->
+        <div class="mode-switch" id="modeSwitch">
+            <button class="ms-btn active" data-dir="en2zh">EN</button>
+            <button class="ms-btn" data-dir="zh2en">ZH</button>
+        </div>
+
+        <div class="card-wrapper">
+            <button class="add-btn" id="addBtn" aria-label="收藏词组">+</button>
+            <div class="card" id="flashcard" role="button" tabindex="0" aria-label="点击翻转卡片">
+                <div class="card-face card-front">
+                    <div class="word" id="wordDisplay">a bit (of)</div>
+                    <button class="speak-btn" id="speakBtn" aria-label="发音">
+                        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button>
+                    <span class="flip-hint" id="flipHint" aria-label="点击翻转卡片"><svg viewBox="0 0 24 24"><path d="M8 9.2h7.2l-1.6-1.6 1.1-1.1L18 9.8l-3.3 3.3-1.1-1.1 1.6-1.6H8z" fill="currentColor" transform="translate(12 12) scale(1.22) translate(-12 -12)"/><path d="M16 14.8H8.8l1.6 1.6-1.1 1.1L6 14.2l3.3-3.3 1.1 1.1-1.6 1.6H16z" fill="currentColor" transform="translate(12 12) scale(1.22) translate(-12 -12)"/></svg></span>
+                </div>
+                <div class="card-face card-back">
+                    <div class="back-word" id="backWord">a bit (of)</div>
+                    <div class="detail" id="synonymBox" style="display:none;">
+                        <div class="label">同义</div>
+                        <div class="content" id="synonymDisplay"></div>
+                    </div>
+                    <div class="detail">
+                        <div class="label">释义</div>
+                        <div class="content" id="meaningDisplay">有一点儿；稍微</div>
+                    </div>
+                    <div class="detail">
+                        <div class="label">例句</div>
+                        <div class="content" id="exampleDisplay"></div>
+                    </div>
+                    <span class="flip-hint-back" aria-label="点击翻转卡片"><svg viewBox="0 0 24 24"><path d="M8 9.2h7.2l-1.6-1.6 1.1-1.1L18 9.8l-3.3 3.3-1.1-1.1 1.6-1.6H8z" fill="currentColor" transform="translate(12 12) scale(1.22) translate(-12 -12)"/><path d="M16 14.8H8.8l1.6 1.6-1.1 1.1L6 14.2l3.3-3.3 1.1 1.1-1.6 1.6H16z" fill="currentColor" transform="translate(12 12) scale(1.22) translate(-12 -12)"/></svg></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav">
+            <button id="prevBtn" aria-label="上一个"><span class="btn-icon">◀</span></button>
+            <button class="primary" id="randomBtn">随机</button>
+            <button id="nextBtn" aria-label="下一个"><span class="btn-icon">▶</span></button>
+        </div>
+    </div>
+</section>
+
+<!-- ================= REVIEW 收藏页 ================= -->
+<section id="reviewView" class="view">
+    <div class="panel review-panel">
+        <div class="back-bar">
+            <button class="back-btn" id="reviewBackBtn" aria-label="返回"><span class="arr">‹</span></button>
+            <button id="goBtn" class="go-btn">GO</button>
+        </div>
+        <div class="header">
+            <h1 id="reviewTitle">📘 REVIEW</h1>
+            <div class="header-right">
+                <span class="counter" id="reviewCount">0</span>
+                <button id="shareBtn" class="share-btn" aria-label="导出收藏词组">
+                    <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="review-list" id="reviewList"></div>
+        <div class="review-empty" id="reviewEmpty">
+            还没有收藏词组<br/>在闪卡右上角点「+」即可加入
+        </div>
+    </div>
+</section>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ============================================================
+       数据 — 初中考纲词组 347 条
+       [id, 词组, 释义, 例句, 翻译, 同义]
+       ============================================================ */
+    var CARDS_RAW = [
+[231, "make money", "挣钱；赚钱", "We begin to consistently make money.", "我们开始持续地盈利。", ""],
+[255, "out of", "从里出来；缺乏", "She went out of the room, taking the flowers with her. A few of the tanks had run out of ammunition.", "她带着花走出了房间。 有几辆坦克的弹药已经用光了。", ""],
+[105, "far away (from)", "（离……）遥远", "He lives far away", "from us）. 他住的地方（离我们）很远。", ""],
+[322, "the week after next", "下下周", "He'll retum to London the week after next.", "他将于下下周返回伦敦。", ""],
+[22, "as well", "也；又", "She sings beautifully, and she can dance as well.", "她歌唱得好，也会跳舞。", "too / also"],
+[29, "at present", "现在，目前", "More and more foreigners are living and working in Shanghai at present.", "目前越来越多的外国人在上海生活和工作。", "for the time being 或 now"],
+[229, "make friends with", "与……交朋友", "Nobody likes to make friends with dishonest people.", "没有人喜欢与不诚实的人交朋友。", ""],
+[326, "throw away", "扔掉", "What a waste to throw it away", "扔掉它多浪费！", ""],
+[70, "big deal", "大人物；了不起的事", "It might not seem like a big deal, but it can have an effect on how you see yourself and how others see you.", "这也许并不是什么重要的事情，却可以对你如何看待自己以及他 人如何看待你产生影响。", ""],
+[101, "each other", "互相；彼此", "John and Mary had known each other pretty well before they got married.", "上U3 约翰和玛丽结婚前已经相当了解对方了。", ""],
+[7, "above all", "首先，尤其；最重要的是", "Above all Susie is a good and tireless writer.", "首要的一点，苏茜是一位优秀的、不知疲倦的作家。", ""],
+[218, "look up", "查寻；抬头看", "You'd better not look up every new word in the dictionary because you can guess it from the context. He had to look up to see the top of the skyscraper.", "你最好不要用词典去查每一个新词，因为你能从上下文中猜到它的意思。 他不得不抬头才能看到摩天大楼的顶部。", ""],
+[51, "be interested in", "对……感兴趣", "Steve Jobs was interested in computers when he was very young.", "史蒂夫•乔布斯很年轻时就对电脑感兴趣了。", ""],
+[122, "get up", "起床", "Yesterday morning I got up carly so as not to be late for the exam.", "为了考试不迟到，昨天早上我很早起床。", ""],
+[204, "lay the table", "摆好餐具", "The girl came in and laid the table for supper.", "女孩进来，把桌子摆好准备吃晚饭。", ""],
+[294, "some day", "将来有一天", "We will meet again some day.", "我们后会有期。", "one day in future"],
+[74, "by bus/train/plane", "乘公共汽车/火车/飞机", "I go to Beijing by bus/train/plane.", "我乘公共汽车/火车/飞机去北京。", ""],
+[277, "rely on", "依靠", "Being independent means believing in yourself without relying on others.", "独立意味着相信自己，不依赖他人。", ""],
+[85, "come true", "实现", "All things will come true if you can become hard-working.", "只要努力，一切都会实现。", ""],
+[15, "amusement park", "游乐园；娱乐公园", "Disneyland is an amusement park.", "迪士尼是一个游乐园。", ""],
+[98, "do some shopping", "买东西", "Can you do some shopping for me.", "你能替我买些东西吗？", ""],
+[312, "take out", "取出", "I take out my glasses from my bag.", "我从包里取出眼镜。", ""],
+[243, "on business", "有事；出差", "Has he gone to Paris on business or for pleasure.", "他去巴黎是出差还是游玩？", ""],
+[55, "be made of", "由…….", "The earth is mainly made of iron and silicon and things like that. from be made of be made from be made into This kind of wine is made from rice. be made into, be made from = Paper can be made from wood. = We can make wood into paper.", "制成 地球主要由铁、硅之类的物质构成。 名师点按 be made of 是常考词组，所以学生一定要掌握其用法，及比较与 be made 和 be made into 的用法区别： 的意思是“由•⋯制成”，表示制成成品后，仍可看出原材料是什 么，保留原材料的质地形状，制作过程仅发生了物理变化。主语是成品，of） 后面是原材料。 的意思是“用•⋯制成”，表示制成的东西完全失去了原材料的 外形或特征，或原材料在制作过程中发生了化学变化，在成品中已无法辨认。 主语是成品，from 后面是原材料。 的意思是“被制成”，是被动形式。所以主语是原材料，into 后面 是成品。 例如：The desks and chairs are made of wood. 这些课桌椅都是由木头制成的。 这种酒是由米酿成的。 注意： 和 make..into.. 在许多时候可互换使用。 例如：Wood can be made into paper. 木材可以制成纸。 纸可以用木材制造。 我们可以把木材制成纸。", ""],
+[230, "make fun of", "拿……开玩笑", "We should not make fun of the weak.", "我们不应该取笑弱者。", ""],
+[47, "be famous for", "以……而著名", "The Bund is famous for its attractive night views.", "外滩是以其迷人的夜意而闻名的。", ""],
+[316, "take up", "开始从事", "The lady took up dancing as a hobby in her sixties, and she is really good at it now.", "这位女士60多岁开始把跳舞作为一种爱好，现在她的舞确实跳得很好。", ""],
+[233, "make sure", "尽力做到；务请；确保；查明；确信", "Make sure you have ample.", "足够的） time to prepare for the new day ahead. 你要保证有足够的时间为即将开始的新的一天做好准备。", ""],
+[285, "shake hands with", "与……握手", "He warmly shook hands with those customers around the table.", "他与坐在周围的客户热情握手。", ""],
+[56, "be made up of", "由……组成", "The organisation is made up of ten people.", "这个组织由10人组成。", "consist of"],
+[30, "at the end of", "在……结束的时候", "At the end of August, many students are doing their homework in a hurry.", "在8月底，许多学生在赶作业。", ""],
+[72, "break down", "损坏；衰弱下来", "The virus caused the computer to break down", "=stop working）. 病毒导致计算机出故障了。", ""],
+[26, "at home", "在家（里）", "I have nothing to do at home.", "我在家没事可做。", ""],
+[17, "apologize to sb. for sth.", "为某事向某人道歉", "You must apologize to her for having kept her waiting.", "让她等了这么久，你必须为此向她道歉。", "say sorry to sb. for sth."],
+[295, "sooner or later", "迟早", "The police will find him sooner or later.", "警方早晚会找到他的。", ""],
+[36, "be afraid of", "害怕", "Chemistry isn't very difficult. You needn't be afraid of it.", "化学不是很难。你不必害怕它。", "be frightened of"],
+[147, "had better", "最好还是；还是……好", "— You'd better read English newspapers more often if you want to improve your reading ability. — Thanks. I'll take your advice. — You had better not forget to bring a power bank when you travel.", "上U2 如果你想提高阅读能力，你最好还是多阅读英文报纸。 谢谢！我会接受你的建议。 你去旅行最好不要忘了带充电宝。", ""],
+[216, "look like", "看上去像", "He looks like a scholar.", "他看上去像个学者。", ""],
+[43, "be connected to / with", "与……", "⋯ His ilness is believed to be connected to bad habits. What makes you suppose him to be connected with them", "有联系 他的病被认为与不良习惯有关。 什么使你想到他和他们有联系？", ""],
+[317, "talk about", "谈到", "We talked about what to do.", "我们谈到了该怎么办。", ""],
+[158, "hear from", "收到……来信", "I hear from her every week.", "我每星期都能收到她的来信。", "receive a letter from sb."],
+[250, "on time", "准时", "I didn't finish the work on time. Alice didn't finish it, either. = Neither Alice nor I finished the work on time.", "爱丽丝和我都没有准时完成工作。", ""],
+[141, "go to school", "上学", "How do you go to school.", "你怎么去上学？", ""],
+[252, "once every four years", "每四年一次", "Olympic is held once every four years.", "奥运会每四年举办一次。", ""],
+[325, "think over", "仔细考虑", "Cool yourself, think it over.", "冷静一下，好好想想。", ""],
+[186, "in the future", "在将来", "He does not know what will happen in the future.", "他不知道将来会发生什么事。", ""],
+[54, "be located (in/on/at)", "位于", "Where will the Olympic Park be located The bakery is located in the new shopping centre. His house is located on the edge of the city.", "奥林匹克公园将建在哪儿？ 这家面包店位于新的购物中心内。 他的房屋坐落在市区的边缘。", "lie in"],
+[2, "a couple of", "两个；几个", "Danny has worked as a newspaper reporter for a couple of years.", "丹尼担任报社记者已有几年了。", ""],
+[266, "praise sb. for sth.", "某事表扬某人", "The teacher praised him highly for his honesty.", "老师大大地表扬了他的诚实。", ""],
+[46, "be/get familiar to/with", "对……熟悉；通晓", "The Oriental Pearl TV Tower is familiar to all Shanghai citizens. Drivers should be very familiar with the traffic signs and rules.", "东方明珠电视塔对所有上海市民来说都很熟悉。 司机应该通晓交通标志和规则。", ""],
+[338, "wait for", "等候；等待", "He had to wait for a few months for the visa to come through.", "他必须等待几个月才能获得签证。", ""],
+[306, "take care of", "照顾；照料", "You needn't worry about your son. He can take care of himself.", "上U5 你不必担心你的儿子。他会照顾自己。", "look after"],
+[193, "jump to a conclusion", "贸然断定；草率决定", "The experienced detective never jumps to a conclusion when dealing with a new case.", "这位经验丰富的侦探处理新案件时从不草率下结论。", ""],
+[190, "in time", "及时", "You must hurry up or you cannot finish it in time.", "你必须抓紧些，否则你来不及完成。", ""],
+[182, "in other words", "换句话说", "He became, in other words, a great hero.", "换句话说，他成了一位伟大的英雄。", ""],
+[25, "at first / last", "起先；开始的时候/最后；终于", "The election went against him at first, but he won at last.", "选举开始时对他不利，但最终他获胜了。", ""],
+[142, "go to sleep", "入睡", "I am too excited to go to sleep.", "我太兴奋了，睡不着。", ""],
+[267, "prefer...to", "更喜欢", "I prefer chemistry to physics. I prefer staying at home to going outside on a wet day.", "我喜欢化学甚于物理。 雨天我宁愿待在家里，也不愿外出。", "like....better than / would rather do than do"],
+[69, "belong to", "属于", "Aunt Liu says these books aren't hers. They belong to the gentleman over there.", "刘阿姨说这些书不是她的。书属于那边那位绅士。", ""],
+[34, "based on", "以……依据；以……为基础；基于", "Success is based on diligence.", "成功是建立在勤奋的基础上的。", ""],
+[265, "point out", "指出", "He pointed out that there was little chance of success.", "他指出成功的机会很少。", ""],
+[126, "go for a swim", "去游泳", "I go to the gym for a swim.", "我去健身房游泳。", ""],
+[203, "laugh at", "嘲笑", "It's impolite to laugh at people in trouble.", "嘲笑处于困境中的人们是不礼貌的。", ""],
+[287, "shopping mall", "大商场，大型购物中心", "Could you tell me the way to the shopping mall.", "你能告诉我去购物中心怎么走吗？", ""],
+[226, "make a living", "谋生", "He makes a living by writing.", "他以写作为生。", "earn money"],
+[262, "play a trick on", "捉弄", "Watching the old man, she was going to play a trick on him.", "观察了一下这个老人，她决定捉弄他一把。", ""],
+[308, "take hold of", "抓住", "She took hold of his hand.", "她握住他的手。", ""],
+[143, "go to the cinema/movie(s)", "去看电影", "She wished to go to the cinema/movie.", "s） yesterday.她昨天想去看电影。", ""],
+[61, "be satisfied with", "对……感到满意", "Alex was satisfied with Julia's honesty.", "亚历克斯对朱丽亚的诚实很满意。", "be pleased with"],
+[83, "come on", "快；走吧；跟我来", "Come on.", "快来！", ""],
+[116, "get off", "下车", "As soon as he got off the bus, the poor man realized he had left his wallet on it.", "一下车，这个可怜人就意识到他把钱包遗忘在车上了。", ""],
+[27, "at least / most", "至少/至多", "If all businesses go paperless, at least one million tons of paper will be saved. The work will be completed inside four hours at most.", "如果所有的企业实现无纸化，至少能节省100万吨的纸。 这项工作至多在4小时内完成。", ""],
+[48, "be fond of", "爱好", "Teenagers are very fond of cartoons. Others may be fond of titles and honors, but I am not.", "青少年非常喜欢漫画。 谚语 人皆好名，我则不然。", "be keen on 或 enjoy"],
+[254, "one after another", "一个接一个，连续地", "They went into the classroom one after another.", "他们一个接一个地走进教室。", ""],
+[249, "on the/one's way (to)", "在去……的路上", "There is little bread in my fridge. Please buy some on your way home.", "冰箱里没有面包了，请你在回家的路上买一些。", ""],
+[144, "go to (the) hospital", "去医院（看病）", "After feeling unwell, John decided to go to the hospital.", "感到不舒服后，约翰决定去医院。", ""],
+[211, "live on", "靠……內生", "She still lives on her parents. Most of Asians live on rice.", "她仍依靠父母生活。 多数亚洲人以大米为主食。", ""],
+[331, "turn down / up", "调低/高", "“'Turn down the radio, Jim. It's too noisy.\" said his grandfather. “ If you are cold, you can turn the heater up.", "把收音机音量调低，吉姆。太吵了。”他的祖父说。 如果你觉得冷，你可以把暖气开大。", ""],
+[278, "run away", "逃跑", "When I saw a wolf, I ran away.", "当我看见狼时，拔腿就跑。", ""],
+[1, "a bit (of)", "有一点儿；稍微", "The patient became a bit better after taking some medicine.", "服药后，病人感觉好点了。", ""],
+[12, "all over", "到处", "He was very well thought of all over the district.", "他在整个地区评价很高。", "everywhere"],
+[324, "think of", "想起；想到", "Will you think of me after I've left?", "我离开后你会想念我吗？", "think about / remember"],
+[9, "add...to...", "加上", "Don't add too much sugar to the cake, or it will be too sweet.", "不要在蛋糕里加太多糖，否则会太甜。", ""],
+[284, "set out", "动身，出发；着手做", "Set out early, or you won't reach your hometown before midnight. The government has set out to make many needed reforms.", "早点出发，否则你午夜前到不了家乡。 政府着手进行诸多必要的改革。", ""],
+[166, "in a hurry", "匆忙", "Please dress up in a hurry", "请快，点打扮！", ""],
+[44, "be covered with", "被……覆盖", "The earth is covered with water.", "地球被水覆盖。", ""],
+[303, "take action", "采取行动", "We must take action to keep up with new developments.", "我们必须采取行动来跟上新的发展形势。", ""],
+[174, "in English", "用英语", "He wrote a report in English yesterday.", "昨天他用英语写了一份报告。", ""],
+[272, "put off", "延期", "We've decided to put off the spring outing till next week because of the bad weather.", "因为天气不好，我们已经决定将春游推迟到下周。 谚语 Never put off till tomorrow what you can do today. 今日事，今日毕。", ""],
+[289, "show sb. around", "带某人参观", "Before you start to work, I'll show you around the factory.", "开始工作前，我先领你参观一下工厂。", ""],
+[179, "in one's fifties", "在某人50多岁时", "Professor Brown is still very active and enjoys hiking even though he is already in his fifties.", "尽管布朗教授已经50多岁了，他仍然非常活跃，喜欢徒步旅行。", "in one's fifties = when one is over fifty"],
+[63, "be strict with", "对严格", "One should be strict with oneself.", "一个人应该严格要求自己。", ""],
+[275, "put up", "举起；挂起", "Please put up your hand if you have any questions. We'd better put up a notice here.", "谁有问题，请举手。 我们最好在这儿贴一张通知。", ""],
+[163, "hold on", "等一等（别挂电话）", "Could you please hold on.", "请别挂电话好吗？", "wait for a moment"],
+[111, "for the first time", "第一次", "They tasted defeat for the first time.", "他们第一次尝到失败的滋味。", ""],
+[146, "grow up", "成年；长大", "Children must be educated to serve their country when they grow up.", "必须教育孩子长大后为国家效力。", ""],
+[159, "hear of", "听说", "I heard of his death last week.", "我上周听说了他的死讯。", ""],
+[115, "get into the habit of", "养成……的习惯", "We should get into the habit of keeping good hours.", "我们应该养成早睡早起的习惯。", ""],
+[248, "on the phone", "在听电话", "You are wanted on the phone.", "有人打电话找你。", ""],
+[195, "keep a diary", "记日记", "I want to keep a diary, but I can't.", "我想记日记，可我做不到。", ""],
+[344, "work out", "做出；算出；制定出", "Jessica worked out/dealt with/solved the physics problems without any help. It wasn't too long before we had worked out a plan acceptable to all. The maths problem was so difficult that nobody could work it out. = The maths problem wasn't easy enough for anybody to work out.", "在没有任何帮助的情况下，杰西卡解出了这道物理题。 没多久我们就制订出一个大家都能接受的计划。 这道数学题太难了，没人能解答出来。", "solve / figure out"],
+[342, "with pleasure", "愉快地", "I will help you with pleasure.", "我很乐意帮助你。", ""],
+[162, "hold a meeting", "举行会议", "We'll hold a meeting to exchange experiences.", "我们将开个会来交流一下经验。", ""],
+[263, "play with", "玩耍，摆弄", "The kid was playing with his ball.", "这个孩子在玩球。", ""],
+[134, "go out", "外出；熄灭", "The concert lasted only a few minutes before the power went out.", "音乐会只持续了几分钟就停电了。", ""],
+[6, "a piece of", "一（块、张、片、件）", "What an important piece of information it is!", "这是一个多么重要的信息！", ""],
+[10, "after all", "终究；毕竟", "He failed after all. After all, practice makes perfect, so keep working on improving your skills.", "最终他还是失败了。毕竟，熟能生巧，所以继续努力提高你的技能吧。", ""],
+[256, "out of date", "过时", "This kind of machine is out of date.", "这种机器过时了。", ""],
+[125, "go ahead", "先走；向前走；去吧；干吧；继续；着手做", "Cross the street and go ahead. —Do you mind if l open the window — Not at all.Go ahead.", "过马路，一直往前走。 你介意我开窗吗？ 完全不会，你开吧。", ""],
+[329, "tour guide", "导游", "As a tour guide, it's important to be knowledgeable about the local culture and landmarks.", "作为一名导游，了解当地文化和地标很重要。", ""],
+[113, "from time to time", "不时；有时", "I can see Hicks at the library from time to time.", "我在图书馆有时能看见希克斯。", ""],
+[82, "come from", "出生于；来自", "I come from China.", "我来自中国。", ""],
+[107, "find out", "找出；查明；了解", "You can look up the dictionary and find out the meaning of the word.", "你可以查词典找出这个词的意思。", ""],
+[293, "social study", "社会研究；社会学习", "Next Monday we will have the last exam for Social Study.", "星期一我们将进行最后一科- 一社会研究的考试。 在社会研究中，学生可以了解一个国家中人与人之间的关系。", ""],
+[282, "see...off", "送行", "I will see you off at the railway station.", "我会去火车站送你。", ""],
+[259, "pay for", "付……钱；买", "How much did you pay for the book.", "那本书你付了多少钱？", "spend....on / cost"],
+[106, "fill in", "填充；填写", "He helped us to fill in a big gap in our knowledge.", "他帮我们填补了知识上的巨大空白。", ""],
+[244, "on foot", "步行；走路", "Today they came here on foot. = Today they walked here.", "今天他们是步行过来的。", ""],
+[251, "on weekdays", "在工作日", "The office is open from 9:00 a.m. to 5:00 p.m. on weekdays.", "办事处工作日从上午9点到下午5点开放。", ""],
+[196, "keep doing sth.", "继续做某事", "The machine kept running.", "机器一直在运转。", "go on doing sth."],
+[130, "go on", "继续", "Now （that） he is well again, he can go on with his English study.", "现在他既已恢复了健康，就可以继续学习英语了。", "continue"],
+[155, "have pity on sb.", "怜悯某人", "I always have pity on the beggars.", "我总是对乞丐心怀怜悯。", ""],
+[260, "pick out", "挑选出", "Let's pick out the bad potatoes from the basket.", "我们把坏掉的土豆从篮子里挑出来吧。", ""],
+[320, "tell a lie", "说谎", "It is wrong to tell a lie.", "撒谎是不对的。", ""],
+[173, "in danger", "处于危险中", "Did the Red Cross provide any medical services to the victims in danger.", "红十字会是否为处于危险中的受害者提供医疗服务？", ""],
+[169, "in all", "总共", "There are fifteen books on the first shelf, twenty-one on the second, that makes thirty-six in all.", "书架的第一层有15本书，第二层有21 本书，总共是36本书。", "altogether"],
+[133, "go on with / doing sth.", "继续做某事", "They went on with their basketball match in spite of the rain. He went on reading the text.", "他们冒雨继续进行篮球比赛。 他继续读这篇课文。", ""],
+[110, "for free", "免费", "You can get it for free.", "你可以免费获取。", ""],
+[301, "take a look", "看一看", "You ought to open your eyes and take a look at reality.", "你应该睁开眼睛去看看现实。", ""],
+[40, "be born", "出生", "He was born in Shanghai in 9. Better be born lucky than wise.", "他1979年在上海出生。 诱语 生不逢时，聪明无用。", ""],
+[234, "make the bed", "整理床铺", "Does she make the bed in the morning.", "她早上整理床铺吗？", ""],
+[86, "come up with", "想出（主意或计划）；提出；赶上", "Several of the members have come up with suggestions of their own.", "有几位成员提出了自己的建议。", ""],
+[66, "be thankful to sb.", "对某人很感激", "I am thankful to you for all this help.", "感谢你的所有帮助。", ""],
+[200, "keep off", "阻挡；不让……接近", "The policeman told the boys to keep off the grass.", "警察告诉男孩们勿踩草地。", ""],
+[258, "pay attention to", "注意", "The teacher told the student to pay attention to his spelling.", "老师提醒那个学生要注意拼写。", ""],
+[114, "get along/on (with)", "进展；与……相处", "I'm sure you'll get on well with your classmates if you are kind.", "我相信如果你友善待人，就能和同学们相处融洽。", ""],
+[50, "be good/poor at", "擅长于/不擅长于", "Tim is good at singing and doing magic, so he is very popular at his friends' parties. He is poor at Chinese.", "蒂姆擅长唱歌和变魔术，所以他在朋友的聚会上非常受欢迎。 他的语文学科比较差。", "do well in"],
+[49, "be full of", "充满", "The hall is full of people.", "大厅里挤满了人。", "be filled with"],
+[154, "have no idea", "不清楚", "I have no idea what to do.", "我不知道该怎么办。", "don't know"],
+[5, "a pair of", "一双；一副", "There is a pair of glasses on the desk.", "桌子上有一副眼镜。", ""],
+[221, "lose (one's) temper", "发脾气", "Father lost his temper after he was told his daughter stole a mobile phone from her deskmate.", "父亲得知女儿偷了她同桌的手机后，大发脾气。", ""],
+[198, "keep...from", "阻止；使……免于", "I don't want to keep you from your work.", "我不想耽误你的工作。", "prevent....from 或 stop....from"],
+[315, "take the place of", "取代", "He wil take the place of you and go to the meeting.", "他将替你去开会。", ""],
+[227, "make a mistake", "出差错；犯错误", "Tom's father looked angrily at Tom because he had made so many mistakes.", "父亲生气地看着汤姆，因为他犯了那么多错误。", ""],
+[140, "go to college", "上大学", "I would like all my children to go to college.", "我希望我的孩子们都考上大学。", ""],
+[73, "break into", "闯人；破门而人", "A thief broke into the shop in our neighbourhood last night and stole several expensive items.", "昨晚一个小偷闯进了我们街区的商店，偷走了好几件贵重物品。", ""],
+[31, "at the same time", "同时", "When playing basketball, we can enjoy the sunshine and fresh air at the same time.", "打篮球时，我们可以同时享受阳光和新鲜的空气。", ""],
+[120, "get tired of", "对……感到厌倦", "I never get tired of watching the landscape.", "我对这景色百看不厌。", ""],
+[79, "catch (a) cold", "cold 着凉；伤风", "The weather in spring is so changeable that many of us have caught a cold.", "春天的天气多变，我们中有很多人都感冒了。", ""],
+[199, "keep in touch (with)", "（与……）保持联系", "How does Jack keep in touch with his friends in America every week.", "杰克每周是如何与美国朋友保持联系的？", ""],
+[37, "be angry with sb.", "生某人的气", "My father was extremely angry with me when he came back from the parents meeting last week.", "上周父亲开完家长会回来，对我非常生气。", ""],
+[18, "arrive at / in a place", "到达某地", "I arrive in Shanghai.", "我到上海了。", "get to / reach a place"],
+[224, "make a film", "拍电影", "They want to make a film in Shanghai.", "他们想在上海拍电影。", ""],
+[219, "lose one's life", "丧生", "He didn't want to lose his life in the battle field.", "他不想在战场上送命。", "die"],
+[84, "come to an end", "结束", "I think he will come to no good end. All good things must come to an end.", "我认为他没有好下场。 谚语， 天下没有不散的筵席。", "complete, finish, be over"],
+[336, "turn over", "翻（车）；翻（页）；翻身", "Turn over, or your back will get sunburnt.", "翻过身去，不然你的后背要被阳光灼伤的。", ""],
+[181, "in order to", "为了", "Jack provided some more evidence in order to prove his point.", "杰克提供了更多证据来证明自己的观点。", "so as to do 或 so that sb. can do"],
+[62, "be similar to", "与……类似", "•• We expected them to be more similar to one another.", "类似 我们期望它们彼此间会更相似。", ""],
+[339, "wake up", "醒来；叫醒", "It is time for you to wake up.", "你该醒醒了。", ""],
+[335, "turn out", "结果是；证明是", "I imagined solving the problem easily, but it turned out to be much harder. It turns out that he was right.", "我原本以为能轻松解决这个问题，结果却困难得多。 最后证明他是对的。", ""],
+[328, "too...to", "太……以至不能", "Mrs. Brown was too old to walk upstairs to the twelfth floor of the building.", "布朗夫人年纪太大，以至于爬不到这幢大楼的12层。", "not....enough to / so....that....can't"],
+[304, "take an underground", "乘地铁", "We had no choice but to take an underground to make it on time.", "为了准时赶到，我们不得不坐地铁。", ""],
+[318, "talk to / with sb.", "与某人谈话", "Since she joined the sports club, she has become very active and enjoys meeting and talking to others. Some teenagers don't like to talk with their parents, but I am different from them. I love to talk with my parents.", "自从加入体育俱乐部，她就变得很活跃并且喜欢聚会，喜欢与其 他人交谈。 一些青少年不喜欢跟他们的父母交谈，但我与他们不同。我 喜欢跟我的父母交谈。", ""],
+[164, "hold one's breath", "屏住呼吸", "I can hold my breath for about one minute.", "我大约可以憋气一分钟。", ""],
+[340, "what's more", "而且；另外", "What's more, we became good friends.", "而且我们变成了好朋友。", ""],
+[311, "take one's advice", "听从某人劝告", "I will take your advice.", "我会听从你的劝告。", ""],
+[168, "in addition", "另外；此外", "In addition, you can get to know a circle of people at your age while playing sports.", "另外，在运动时，你可以认识一群同龄人。", ""],
+[296, "stand for", "代表", "What does N.E.stand for? N.E.", "这两个字母代表的是什么呢？", ""],
+[150, "happen to sb.", "发生到某人身上", "An odd thing happened to him this morning.", "他今天早晨遇到一件怪事。", ""],
+[310, "take off", "脱掉（衣物等）；起飞", "Please take off your coat. It's very hot inside the room. The plane took off on time.", "请脱下外衣。房间里非常热。 飞机准时起飞。", ""],
+[87, "communicate with", "与交流", "Computers are used to help us communicate with others easily. Lin Lin often communicates with her American friend to practise English. = Lin Lin often practises English by communicating with her American friend.", "电脑能帮助我们轻松地与他人进行交流。 琳琳经常通过与她的美国朋友交流来练习英语。", "keep in touch with"],
+[42, "be careful with", "小心", "Be careful with this knife, Richard, or you'll hurt yourself.", "理查德，小心这把刀，否则你会伤到自己。", "take care"],
+[208, "leave (secondary) school", "school（中学）毕业", "I had to seek a living before I left secondary school.", "我中学没毕业就去谋生了。", ""],
+[81, "check in", "办理登机；登记（人住等）", "I want to check in.", "我想办理登机手续。", ""],
+[288, "show off", "炫耀", "She likes to show off.", "她喜欢自我炫耀。", ""],
+[235, "make up one's mind", "下决心", "They made up their minds to sell the house.", "他们决定把房子卖掉。", "decide"],
+[67, "be used to", "习惯于", "My grandmother used to wash clothes by hand, but now she is used to doing it with the washing machine. Jenny stays with a Chinese family for two years. Now she's used to the life in China.", "我的祖母过去常常用手洗衣服，但现在她习惯用洗衣机了。 詹妮在一个中国家庭暂住了两年。现在她习惯了在中国的生活。", ""],
+[41, "be busy with / doing sth.", "忙于做某事", "Many students have to give up their hobbies because they are busy with their studies. He is busy preparing for the examination.", "许多学生因为忙于学业，不得不放弃自己的兴趣爱好。 他正忙着准备考试。", ""],
+[135, "go over（= review）", "复习；仔细地再读一遍", "You may fail to pass the examination unless you do your best to go over the lessons.", "除非你尽力复习，否则你可能无法通过考试。", ""],
+[165, "huge amounts of", "大量的", "They have huge amounts of money.", "他们很有钱。 名师点按 huge amounts of 是常考词组，常出现在保持句意基本不变的句型转换练习 中，所以学生一定要知道：huge amounts of 与 plenty of, a lot of 或 much 意思相 同，在句中可以互换。", "plenty of / a lot of / much"],
+[77, "calm down", "使……平静下来", "Calm down, there's nothing to worry about.", "你冷静一下，没有什么可焦虑的。", ""],
+[112, "for the time being", "暂时；眼下", "She's staying with her aunt for the time being.", "她暂时住在她姨妈那里。", ""],
+[64, "be supposed to", "应该，被期望", "The whole conference as totally disorganised and nobody knew where they were supposed to be or what they were supposed to be doing.", "整个会议安排混乱无序，既没人知道该 坐哪里，也没人知道该做什么。", ""],
+[319, "tell...from", "区别；分辨", "Can you tell her from her twin sister.", "你能分辦她和她的双胞胎妹妹吗？", ""],
+[160, "help sb. with sth.", "帮助某人做某事", "Jane wil help me with the maths problem.", "简将帮助我做数学题。", ""],
+[53, "be late for", "迟到", "If John doesn't get up immediately, he will be late for the meeting. = Unless John gets up immediately, he will be late for the meeting. John, please don't be late for school again. = You mustn't come to school late again, John.", "如果约翰不马上起床，他开会将要迟到了。 约翰，上学请别再迟到了。", "come to....late"],
+[20, "as long as", "只要", "It's okay to disagree as long as we respect each other's views.", "只要我们尊重彼此的观点，有不同意见没关系。", ""],
+[23, "ask for", "请求；寻求", "I'll ask for your help if I can't work out the problem.", "如果我解不出这题，我会请你帮忙。", ""],
+[129, "go in for", "参加；从事于；酷爱", "Which events is he going in for at the Olympics They wanted me to go in for film work. Many people go in for golf.", "他将在奥运会上参加什么项目？ 他们要我从事电影工作。 许多人喜欢打高尔夫球。", "take part in"],
+[3, "a kind of", "一种；一类", "Apple is a kind of fruit. This shop sells all kinds of watches from different countries.", "苹果是一种水果。 这家商店出售来自不同国家的各种手表。", ""],
+[108, "focus on", "聚焦于", "We need to focus our efforts on getting the work down.", "我们需要集中精力完成这项工作。", ""],
+[118, "get ready for", "作准备", "Our class teacher asked us if we had got ready for the final exams.", "老师问我们是否已为期末考试做好了准备。", ""],
+[96, "do one's best", "尽最大努力", "We did our best, but he is still not pleased with us. Did the doctors do their best to operate on the wounded.", "我们尽力了，可他还是对我们不满意。 这些医生尽最大努力为伤员动手术了吗？", ""],
+[71, "both...and...", "两者都；不仅……而且……", "Both Rose and Danny went to the car exhibition yesterday. = Rose went to the car exhibition yesterday. Danny went there, too.", "罗斯和丹尼昨天都去了汽车展览会。", ""],
+[102, "encourage sb. to do sth.", "鼓励某人做某事", "Miss Green is kind and patient. She always encourages Roddy to put up his hand in her class.", "格林老师和善又耐心。在她的课上她总是鼓励罗迪举手发言。", ""],
+[57, "be pleased with", "对……满意", "Helen's teacher was so pleased with the great progress she made this term. We are so pleased with what they have done in the Paris Olympic Games.", "海伦的老师对她这学期取得巨大进步很满意。 我们对他们在巴黎奥运会上的表现很满意。", "be satisfied with 或 be happy about"],
+[337, "used to", "过去常常", "He used to be a good movie director. Sarah used to ride a bike to work.", "他曾经是一位很好的电影导演，但现在他只忙着赚钱。 虽然爱德华70多岁了，但他仍然和过去一样走得很快。 莎拉过去经常骑车去上班，但现在她开车去。 名师点按 used to 是常考词组，常出现在保持句意基本不变的句型转换练习中，所以 学生一定要知道：used to do 与 often did 意思相同，在句中可以互换。 例如：They used to play football in our housing estate. 他们过去经常在我们小区踢足球。", "often did in the past"],
+[246, "on one's side", "在某人一边", "I wish she would be on my side.", "我希望她能站在我这边。", ""],
+[323, "think about", "考虑（做某事的可行性）", "I will think about your suggestion.", "我会考虑你的建议。", ""],
+[172, "in class", "在课上", "Tom pays attention in class.", "汤姆上课非常专心。", ""],
+[176, "in favour of", "赞成", "Are you in favour of this plan.", "你赞成这个计划吗？", ""],
+[76, "by the way", "顺便说；顺便问一下", "By the way, what time is it.", "顺便问一下，现在几点了？", ""],
+[139, "go to bed", "就寝", "It is time for me to go to bed.", "我睡觉的时间到了。", ""],
+[241, "of course", "当然", "He was quite polite, of course, but somehow I didn't like his manner. — May I come with you to see Swan Lake - Yes, of course. -.", "上U1 当然，他相当有礼貌，但我就是有点儿不喜欢他的举止。 我可以和你一起去看《天鹅湖》吗？ 当然可以。", ""],
+[171, "in charge of", "主管，负责", "The teacher is in charge of the class.", "这位教师负责这个班。", "manage"],
+[117, "get on", "上车", "The bus is coming. Be careful when you get on the bus.", "车来了。上车时小心。", ""],
+[123, "give sb. a hand", "助某人一臂之力", "The youth gave me his hand when I was lifting my baggage.", "当我正要提起行李时，那个年轻人帮了我。", ""],
+[89, "complain about", "投诉；抱怨", "He never complained about working overtime.", "他从来不抱怨加班。", ""],
+[205, "learn...from", "向……学习", "She learned everything from me.", "她什么都是向我学的。", ""],
+[11, "agree with sb.", "同意某人的意见", "I agree with you.", "我同意你的意见。", "have the same opinion with sb."],
+[183, "in return", "作为回报", "What did you give him in return.", "你给他什么作为报答呢？", ""],
+[100, "dress up", "打扮", "They all dressed up to take part in the New Year's party.", "他们都盛装打扮，去参加新年晚会。", ""],
+[291, "so far", "到目前为止", "So far neither of the parcels I sent has arrived yet.", "到目前为止，我寄的两个包裹都还没到。", ""],
+[213, "look at", "看；观看", "The pupils are all looking at the chart on the wall.", "学生都瞧着墙上的图表。", ""],
+[207, "leave for", "动身去", "I'll leave for Beijing tomorrow.", "我明天动身去北京。", ""],
+[136, "go sailing", "去航海，去航行", "I want to go sailing to relax myself.", "我想去航海放松一下。", ""],
+[341, "with great care", "非常小心", "You must use this instrument with great care.", "这种仪器使用时必须非常小心。", ""],
+[201, "keep quiet", "保持安静", "If you won't keep quiet, you can get out.", "如果你不保持安静，那就只好请你出去了！", ""],
+[346, "would like / love (to)", "想要；（表示喜欢、愿意）很想；很愿意", "Would you like/love to go somewhere.", "你想要去个什么地方吗？", ""],
+[313, "take part in", "参加", "Idon't think he will come and take part in the meeting, will he? Five hundred students in our school took part in the opening ceremony of the Tourism Festival.", "上U4 我认为他不会来参加会议，他会来吗？ 我们学校有500名学生参加了旅游节的开幕式。", "join in"],
+[60, "be responsible for", "对", "• A headmaster is the person who is responsible for a school.", "负责任 校长是学校的负责人。", "take charge of"],
+[13, "all right", "行了；好吧；（病）好了", "All right, I accept your apology.", "好吧，我接受你的道歉。", ""],
+[127, "go hiking", "去远足；去徒步旅行", "They may go hiking around the island, or swimming in the ocean.", "他们可以环岛徒步旅行或在海里游泳。", ""],
+[148, "hand in", "上交", "What a disappointing excuse you've made when failing to hand in your project on time", "你没能按时交项目，找的借口太让人失望了！", ""],
+[16, "and so on", "等等", "She spends her day doing housework, watching television, reading, and so on.", "她用一天的时间来做家务、看电视、看书，等等。", ""],
+[109, "for example", "例如", "For example, the performance of actors and actresses is very important in your film.", "上U4 例如，在你的电影中，演员的表现是非常重要的。", ""],
+[99, "dream of", "想到", "I wouldn't dream of studying abroad in the near future.", "近期内我不考虑出国留学。", "think of 或 think about"],
+[4, "a lot of / lots of", "许多", "Although the World Expo was over, a lot of visitors still go to the China Pavilion to enjoy themselves and take photos.", "虽然世博会结束了，但还是有很多游客去中国馆参观、拍照。", ""],
+[19, "as...as", "像……一样；如同", "The food in Shanghai is not as hot as that in Sichuan.", "上海的食物不像四川的食物那么辣。", ""],
+[121, "get to", "到达", "Have we got to the zoo yet.", "我们到动物园了吗？", ""],
+[178, "in hospital", "住院", "He was in hospital in Washington.", "他在华盛顿住院了。", ""],
+[149, "happen to do", "碰巧做", "We happened to discover that we had a friend in common.", "我们碰巧发现我们有一个共同的朋友。", ""],
+[220, "lose one's way", "迷路", "If you don't take the map with you, you may lose your way to Shanghai Museum. = Take the map with you, and you can find the way to Shanghai Museum.", "如果不带上这张地图，你去上海博物馆可能会迷路。", ""],
+[128, "go home", "回家", "After the movie, we went home.", "看完电影，我们就回家了。", ""],
+[39, "be bad for", "有害于", "It is bad for your health.", "这个对你的健康有害。", "be harmful to"],
+[103, "enjoy oneself", "过得愉快；过得快乐；玩得高兴", "At the yesterday's English Evening, all of us enjoyed ourselves.", "昨天的英语晚会上，我们都玩得很开心。", "have a good time"],
+[334, "turn on", "开，旋开（电灯、电视、收音机等）", "Don't turn on the MP3 too loud. It's bad for your ears.", "不要把MP3开得太大声。对你的耳朵不好。", ""],
+[347, "would rather", "宁愿，宁可", "They would rather use the colour like orange because it's much brighter than others.", "他们宁愿使用像橙色这种颜色，因为它比别的颜色鲜艳。", "would prefer to"],
+[276, "refer to", "参考；涉及；指的是", "We often refer to these books in our work.", "我们工作中经常参考这些书。", ""],
+[345, "worry about", "而担心", "You really don't have to worry about your weight. You look just right.", "真的，你不必担心你的体重。你看起来正好。", "be worried about"],
+[188, "in the past", "在过去；从前", "The book was banned in the past.", "这本书过去是禁书。", ""],
+[206, "leave a message", "留个口信", "May I leave a message, please.", "请问，我可以留个口信吗？", ""],
+[298, "stop...from", "阻止……做", "AlDS is a kind of dangerous disease. Actions must be taken to stop it from spreading.", "艾滋病是一种危险的疾病。必须采取行动阻止它蔓延。", ""],
+[59, "be ready for", "作准备", "The order will be ready for delivery next week.", "这批订货将于下周备好待发。", "get ready for 或 prepare for"],
+[261, "pick up", "捡起；拾起", "I picked up your book by mistake.", "我错拿了你的书。", ""],
+[217, "look out", "注意；留神", "The police reminded the public to look out for pickpockets in crowded areas.", "警方提醒公众在拥挤区域要提防扒手。", "be careful"],
+[75, "by oneself", "亲自", "Among all the Christmas cards, mine is the best. I made it by myself.", "在所有的圣诞贺卡中，我的圣诞贺卡是最好的。这是我亲手做的。", ""],
+[68, "because of", "由于", "I came back because of the rain.", "因为下雨我就回来了。", ""],
+[161, "here and there", "到处", "We went here and there looking for berries.", "我们四处寻找浆果。", "everywhere"],
+[236, "mobile phone", "手机", "He forgot the charger for his mobile phone.", "他忘了带手机充电器。", ""],
+[202, "keep sb. busy", "让某人忙个不停", "That job will keep you busy for a long time.", "那项工作会使你忙碌很长时间。", ""],
+[197, "keep fit", "保持健康", "I practise yoga to keep fit.", "我练瑜珈来保持健康。", ""],
+[225, "make a fire", "生火", "Then we started to make a fire.", "然后我们开始生火。", ""],
+[210, "listen to", "听……（讲话）", "I'm talking to you. Please listen to me carefully.", "「'm talking to you, Jack. Please Listen to me caretully. 杰克，我在跟你说话，请仔细听我讲。", ""],
+[14, "all the way", "一路上", "Did you run all the way here?", "你是一路跑来的吗？", ""],
+[321, "the same...as", "与……同样", "He works in the same workshop as I do.", "他和我在同一个车间干活。", "as + 原级 + as"],
+[270, "protect...from", "保护……免受", "Trees should be well protected from the cold during winter.", "冬天要保护好树木以防冻坏。", ""],
+[156, "have sports", "进行体育活动", "Does he have sports every day.", "他每天运动吗？", ""],
+[274, "put out", "扑灭", "The firemen fought bravely and put out the forest fire in the end.", "消防队员英勇奋战，最终扑灭了森林大火。", ""],
+[264, "plenty of", "大量的，充足的，很多的", "She had plenty of imagination.", "她有丰富的想象力。", ""],
+[131, "go on a diet", "实行节食", "Maybe you need to go on a diet.", "或许你应当节食了。", ""],
+[209, "less / more than", "少于/多于", "The production of this factory is Less than that of that factory. He did more than the rest of us did together.", "这个工厂的产量少于那个工厂。 他做的比我们其余人合在一起做的还要多。", ""],
+[242, "on average", "平均；通常", "How many times do you dine out per week on average.", "你每星期通常下几次馆子？", ""],
+[88, "compete with", "与", "•• • She competed with her rival for a prize.", "竞争；与⋯ 攀比 她与对手为了奖品展开竞争。", ""],
+[93, "depend on", "依靠，依赖", "A friend is somebody that we can depend on when we are in trouble.", "上U4 朋友是我们在遇到麻烦时可以依靠的人。", "rely on"],
+[180, "in one's opinion", "根据某人的看法", "In my opinion he is not right.", "在我看来，他是错的。", "I think"],
+[283, "sell out", "售完", "The shop sold out all its shirts.", "那家商店的衬衫都卖光了。", ""],
+[271, "provide...with", "向……提供", "They provide these children with story books.", "他们给这些孩子们提供故事书。", ""],
+[187, "in the middle of", "在……中间", "He positioned the lamp in the middle of the table.", "他把灯放在桌子中间。", ""],
+[228, "make a noise", "弄出声", "If you make a noise, you'll scare off the animals.", "如果你弄出声响就会把动物吓跑。", ""],
+[253, "once more / again", "再次", "I'll repeat the question once more.", "我把这个问题再重复一次。", ""],
+[332, "turn into", "变成", "The old building was turned into a library.", "这幢旧房子被改造成了图书馆。", ""],
+[151, "have a class / lesson", "上课", "I am afraid I must be going now. I have a class at ten. You have eight lessons every day, don't you.", "我想我现在得走了。我10点有课。 你每天有8节课，不是吗？", ""],
+[280, "save one's life", "挽救某人生命", "He wanted to save her life at all cost.", "他要不惜一切代价挽救她的生命。", ""],
+[132, "go on a picnic", "去野营；去野餐", "Mr. Smith will go on a picnic this Saturday unless the weather is bad.", "史密斯先生将于本周六去野餐，除非天气不好去不了。", ""],
+[214, "look for", "寻找", "Her sister wanted to further her study instead of looking for a job.", "她妹妹想要继续深造，而不是找工作。", ""],
+[286, "share...with", "与……分享", "Nowadays many people share photos with their friends on the Internet.", "现在很多人在互联网上和他们的朋友分享自己的照片。", ""],
+[185, "in the end", "最后；终于", "Make a plan for your future study, and you will succeed in the end.", "为你未来的学习制定计划，最终你一定会成功。", "at last 或 finally"],
+[292, "so that", "为了，以便", "Speak louder so that everyone in the meeting room can hear you clearly.", "请你大声点，以便会议室的每个人都能清楚地听到你的讲话。", "in order / so as to + do"],
+[290, "shut up", "住口", "I wish she would shut up.", "她要是闭嘴该多好！", ""],
+[194, "just now", "刚才", "Oh, my goodness. I left my dictionary in the reading-room just now.", "啊，天哪！我刚才把词典忘在阅览室里了。", "a moment ago"],
+[222, "lose weight", "减肥", "Danny has decided to go on a diet because he wants to Lose weight.", "丹尼决定节食，因为他想减肥。", ""],
+[52, "be keen on", "喜爱", "Angel is keen on all kinds of pop music.", "安杰尔喜爱各种流行音乐。", ""],
+[268, "prepare for", "准备", "The students in our school are busy preparing for our School Art Festival.", "我们学校的学生正忙着准备学校的艺术节。", ""],
+[269, "prevent...from", "阻止……做", "All of us should try to keep fit and prevent from eating too much. Nobody can prevent him from running the risk.", "我们大家应该努力保持健康，避免吃得过多。 没有人能够阻止他去冒险。", ""],
+[138, "go sightseeing", "去观光", "Did you go sightseeing last Sunday.", "上星期天你是否去观光游览了？", ""],
+[45, "be different from", "与……不同", "The textbooks you're using are different from ours.", "你们使用的课本和我们的不同。", "be not the same as"],
+[223, "make a decision", "作出决定", "You can make a decision right now. You can also think it over for a couple of days.", "你可以现在就做决定，也可以再考虑几天。", ""],
+[192, "instead of", "代替；而不是", "It's very hot. Why not go for a swim instead of staying in the air-conditioned room.", "上U2 天气非常热。为什么不去游泳却待在空调房间里呢？", ""],
+[177, "in front of", "在……前面", "Jane felt nervous when she made her first speech in front of the whole school.", "当简在全校师生面前第一次演讲时，她感到紧张。", ""],
+[309, "take notes", "记笔记", "We should take notes in class.", "我们上课应该记笔记。", ""],
+[97, "do sb. a favour", "帮某人忙", "Do me a favour and close the window.", "帮我把窗户关上。", "help sb. / give sb. a hand"],
+[300, "surf the Internet", "上网", "I seldom watch TV. But I always surf the Internet on weekends.", "我很少看电视。但周末我总是上网。", ""],
+[167, "in a minute", "一会儿", "The English teacher isn't here. She has gone to the office and she will be back in a minute.", "英语老师不在这里。她已经去了办公室，一会儿就回来。", ""],
+[232, "make progress", "取得进步", "It's nice of Andy to help me with my English and I've made some progress.", "安迪真好，他帮我学英语。我已经取得了一些进步。", ""],
+[191, "in trouble", "处于困境中", "The young policeman always helps the old when they are in trouble.", "这个年轻警察在老人有困难时总会帮助他们。", ""],
+[38, "be/become aware of", "意识到；察觉，知道", "Just be aware of how you are breathing.", "只需要意识到自己是如何呼吸的就可以了。", ""],
+[257, "over and over", "再三；一次次", "He performed his experiment over and over, working till midnight.", "他一次次地进行实验直到深夜。", "again and again"],
+[343, "with the help of", "在……的帮助下", "I read English magazines with the help of a dictionary. With the help of them, we could finish the work in time. = They helped us so much that we could finish the work in time.", "我借助词典翻阅英文杂志。 在他们的帮助下，我们能够按时完成这项工作。", "with one's help"],
+[189, "in this way", "这样", "What makes him behave in this way", "是什么原因使他这样做的？", ""],
+[95, "do harm to", "对……有害；损害", "Don't do harm to animals.", "别伤害动物。", ""],
+[32, "at / on weekends", "在周末", "Willy doesn't do any housework with his mum at weekends.", "威利周末不跟他妈妈一起做任何家务。", ""],
+[297, "stay up", "熬夜", "You had better not stay up too late.", "你最好别熬夜太晚。", "not go to bed"],
+[8, "according to", "按照；根据；按（……所报道）；依照；据（……所说）", "According to the traffic rules, a baby can not sit on an adult's lap in a car.", "根据交通规则，婴儿不能坐在车内成年人的腿上。", "in one's opinion"],
+[279, "run out of", "用完；耗尽", "We have run out of petrol.", "我们的汽油已用完。", "finish 或 use up"],
+[58, "be proud of", "而感到自豪", "All of us are proud of the great changes in Shanghai. We're sure Shanghai will be even better tomorrow.", "我们都为上海的巨大变化而感到骄傲。我们相信上海的明天会更好。", ""],
+[145, "go wrong", "出错", "Your computer will go wrong without any anti-virus software.", "你的电脑没有任何杀毒软件会出问题的。", ""],
+[65, "be surprised at", "对……感到惊奇", "Louise won the first prize in a maths contest. We were surprised at the news.", "路易斯获得了数学竞赛一等奖。我们对这一消息感到惊讶。", ""],
+[170, "in brief", "简而言之", "In brief, my hometown is a place which is worthy of being visited.", "简而言之，我的家乡是一个值得游览的地方。", ""],
+[333, "turn off", "关掉（电灯、电视、收音机等）", "When you leave your classroom, remember to turn off the lights.", "当你离开教室时，记得关灯。", ""],
+[78, "care for", "照顾；喜欢", "Lucy thinks young people can learn how to care for others by keeping pets. I don't much care for sweets.", "露西认力，年轻人饲养宠物可以从中学习如何照顾他人。 我不太喜欢吃糖果。", "look after 或 take care of"],
+[305, "take away", "拿走", "The teacher didn't leave until all the students were taken away by their parents.", "上U1 直到所有的学生都被他们父母接走，老师才离开。", ""],
+[212, "look after", "照料；照顾", "As middle school students, we should know how to look after ourselves.", "作次中学生，我们应该知道如何照顾自己。", "take care of"],
+[237, "next to", "紧挨着；紧靠着", "I sat next to a girl whose name was Diane.", "我坐在一个名叫黛安的女孩旁边。", ""],
+[175, "in fact", "事实上；实际上", "In fact, he has gone abroad.", "事实上，他出国了。", ""],
+[119, "get rid of", "摆脱", "Jane gets angry easily.She'd better get rid of it.", "简容易发怒。她最好改掉这个毛病。 近义give up", ""],
+[245, "on holiday", "在休假", "I'm on holiday next week.", "我下周休假。", ""],
+[33, "at work", "在工作", "I'm at work.", "我正在工作。", ""],
+[273, "put on", "穿上；戴上；上演", "Please put on yourjacket. A film will put on.", "请穿上夹克衫。 电影即将上映。", ""],
+[330, "try on", "试穿", "I'd like to try on that blue wool coat.", "我想试穿那件蓝色的羊毛外套。", ""],
+[239, "not...at all", "一点也不，根本不", "He is not worried at all.", "他一点都不担心。", ""],
+[92, "deal with", "处理", "She spent years dealing with an unsolved case from history. Would you please tell me how I should deal with it for the time being = Would you please tell me how to deal with it for the time being.", "上U2 她花费数年时间处理了一个未解决的陈年旧案。 请您告诉我该怎么处理眼下这件事？", ""],
+[281, "search for", "搜寻；搜查", "They searched all the drawers for the missing paper.", "他们翻了所有的抽屉找寻那份遗失的文件。", ""],
+[240, "now and then / again", "时而；偶尔", "Now and then we heard shots in the woods.", "我们不时听到从森林里传来的枪声。", "from time to time"],
+[80, "change one's mind", "改变主意", "Nothing can make me change my mind.", "什么也不能使我改变主意。", ""],
+[137, "go shopping", "去购物", "Since the rain has stopped, why not go shopping now.", "现在既然雨停了，为什么不去购物呢？", ""],
+[152, "have a good time", "玩得很愉快；过得很愉快", "We had a very good time at the evening party.", "我们在晚会上玩得很愉快。", "enjoy oneself"],
+[24, "at breakfast/lunch/supper", "早/午/晚餐时", "My family talk to each other at breakfast/lunch/supper.", "我的家人在早/午/晚餐时交流。", ""],
+[104, "fall asleep", "人睡", "I can fall asleep anytime and anywhere.", "随时随地我都能入睡。", ""],
+[307, "take charge of", "负责，管理", "The policeman said he would take charge of the gun.", "那位警察说他负责看管这支枪。", ""],
+[91, "cut down", "砍倒；削减", "He cut the tree down. Why did Jeff cut down the expenses on clothes You must cut down on sugar to lose weight.", "他把这棵树砍倒了。 为什么杰夫减少了在衣服上的花销？ 你必须少吃糖以减轻体重。", ""],
+[90, "consist of", "由……组成", "⋯ Does the new product consist of four main parts inside", "组成 这个新产品主要由四部分组成吗？", "be made up of"],
+[184, "in surprise", "惊奇地", "Are you surprised when someone looks at you in surprise.", "当有人惊异地看着你时，你感到惊讶吗？", ""],
+[302, "take a message for sb.", "给某人捎个口信", "Can I take a message for him.", "我能替您给他捎个口信吗？", ""],
+[238, "no longer / not...any longer", "不再", "Tom, you are no longer a little boy. You should learn to be independent. = Tom, you are not a little boy any longer. You should learn to be independent.", "汤姆，你不再是一个小男孩了。你应该学会独立。", ""],
+[94, "die of", "因（病）而死", "People are dying of cancer more and more often.", "死于癌症的人越来越多了。", ""],
+[247, "on the other hand", "在另一方面", "He is naughty, but on the other hand, he is clever.", "他是调皮，但另一方面，他很聪明。", ""],
+[21, "as soon as", "就", "As soon as George heard the bad news, his face turned pale.", "乔治一听到坏消息，脸色就变得煞白。", ""],
+[124, "give up", "放弃", "You should give up smoking.", "你应该戒烟。", "stop sth."],
+[153, "have breakfast", "吃早餐", "Peter doesn't have breakfast at school every day.", "彼得不是每天都在学校用早餐的。", ""],
+[299, "such as", "例如；诸如", "We dislike people such as him.", "上U6 我们不喜欢像他这样的人。", ""],
+[215, "look forward to", "期待着", "Little Adam is looking forward to meeting his friend next week.", "小亚当期待下周见到他的小伙伴。", "expect to do"],
+[314, "take place", "发生；举行", "The accident took place on the fifth day of their joumey. Most people were sleeping when the big earthquake took place in that area.", "事故发生在他们旅程的第五天。 大地震发生时，那个地区的大部分人正在睡梦中。", "happen / be held"],
+[327, "to one's joy / surprise", "使某人高兴/惊奇的是", "To my great joy, my lost watch was found. To my surprise, he could work out the problem alone. =I was surprised that he could work out the problem by himself.", "让我极为高兴的是，我那块丢失的手表找到了。 令我吃惊的是，他能自己解决这个问题。", ""],
+[157, "have (got) to", "to 不得不", "You've got to come.", "你必须来。", ""],
+[35, "be able to", "能够（有能力）", "If you save a few coins every day, you'll be able to buy a mobile in a year.", "如果你每天节省几个硬币，你就可以在一年内购买一部手机。", ""],
+[28, "at once", "立刻；马上", "I'm leaving for Rome at once.", "我马上去罗马。", "immediately 或 right now, right away"]
+];
+
+    /* 构建卡片对象 */
+    var CARDS = CARDS_RAW.map(function (item) {
+        return { id: item[0], phrase: item[1], meaning: item[2], example: item[3], exampleZh: item[4] || null, synonym: item[5] || '', _loading: false };
+    });
+
+    /* ============================================================
+       分组：每组 20 张，最后组可能不足
+       ============================================================ */
+    var GROUP_SIZE = 20;
+    var groups = [];
+    for (var i = 0; i < CARDS.length; i += GROUP_SIZE) {
+        groups.push({
+            name: 'DAY ' + (Math.floor(i / GROUP_SIZE) + 1),
+            cards: CARDS.slice(i, i + GROUP_SIZE)
+        });
+    }
+
+    /* ============================================================
+       工具函数
+       ============================================================ */
+    var $ = function (id) { return document.getElementById(id); };
+
+    function hexToRgb(h) {
+        h = h.replace('#', '');
+        if (h.length === 3) h = h.split('').map(function (c) { return c + c; }).join('');
+        return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
+    }
+    function mix(a, b, t) {
+        var A = hexToRgb(a), B = hexToRgb(b);
+        return '#' + [Math.round(A.r + (B.r - A.r) * t), Math.round(A.g + (B.g - A.g) * t), Math.round(A.b + (B.b - A.b) * t)]
+            .map(function (v) { return v.toString(16).padStart(2, '0'); }).join('');
+    }
+    function rgba(hex, alpha) {
+        var c = hexToRgb(hex);
+        return 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + alpha + ')';
+    }
+    function luminance(hex) {
+        var c = hexToRgb(hex);
+        return (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
+    }
+    function escapeRegex(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    /* 例句中高亮词组：括号变体 + 斜杠变体 + 动词时态/省略号/sb.sth./one's 正则变体 */
+    var HL_STOP = {the:1, one:1, a:1, an:1, at:1, in:1, on:1, of:1, to:1, for:1, with:1, up:1, down:1, out:1, off:1, by:1, from:1, into:1, over:1, under:1, about:1, as:1, or:1, and:1, but:1, do:1, be:1, is:1, are:1, was:1, were:1, it:1, no:1, not:1, too:1, so:1};
+    var HL_VERB = {be:'be|am|is|are|was|were|been|being', get:'get|gets|getting|got|gotten', go:'go|goes|going|went|gone', take:'take|takes|taking|took|taken', make:'make|makes|making|made', turn:'turn|turns|turning|turned', look:'look|looks|looking|looked', have:'have|has|had|having', do:'do|does|did|done', see:'see|sees|seeing|saw|seen', catch:'catch|catches|catching|caught', break:'break|breaks|breaking|broke|broken', keep:'keep|keeps|keeping|kept', pick:'pick|picks|picking|picked', run:'run|runs|running|ran', sell:'sell|sells|selling|sold', think:'think|thinks|thinking|thought', throw:'throw|throws|throwing|threw|thrown', hear:'hear|hears|hearing|heard', say:'say|says|saying|said', tell:'tell|tells|telling|told', give:'give|gives|giving|gave|given', help:'help|helps|helping|helped', stop:'stop|stops|stopping|stopped', prepare:'prepare|prepares|preparing|prepared', point:'point|points|pointing|pointed', play:'play|plays|playing|played', enjoy:'enjoy|enjoys|enjoying|enjoyed', use:'use|uses|using|used', share:'share|shares|sharing|shared', show:'show|shows|showing|showed|shown', talk:'talk|talks|talking|talked', learn:'learn|learns|learning|learned|learnt', lay:'lay|lays|laying|laid', search:'search|searches|searching|searched', rely:'rely|relies|relying|relied', praise:'praise|praises|praising|praised', lose:'lose|loses|losing|lost', prefer:'prefer|prefers|preferring|preferred', prevent:'prevent|prevents|preventing|prevented', protect:'protect|protects|protecting|protected', provide:'provide|provides|providing|provided', shake:'shake|shakes|shaking|shook|shaken', jump:'jump|jumps|jumping|jumped', happen:'happen|happens|happening|happened', compete:'compete|competes|competing|competed', complain:'complain|complains|complaining|complained', apologize:'apologize|apologizes|apologizing|apologized', agree:'agree|agrees|agreeing|agreed', encourage:'encourage|encourages|encouraging|encouraged', die:'die|dies|dying|died', dress:'dress|dresses|dressing|dressed', focus:'focus|focuses|focusing|focused', leave:'leave|leaves|leaving|left', put:'put|puts|putting|put', find:'find|finds|finding|found', write:'write|writes|writing|wrote|written', read:'read|reads|reading|read', come:'come|comes|coming|came', send:'send|sends|sending|sent', work:'work|works|working|worked', wake:'wake|wakes|waking|woke|woken'};
+    function highlightPhrase(example, phrase) {
+        var variants = [];
+        function add(v) {
+            v = String(v || '').replace(/\s+/g, ' ').trim();
+            if (!v || v.length < 3 || variants.indexOf(v) >= 0) return;
+            if (v.indexOf(' ') < 0 && HL_STOP[v.toLowerCase()]) return;
+            if (/^(sb\.?|sth\.?|one's|oneself|\.\.\.)$/i.test(v)) return;
+            variants.push(v);
+        }
+        add(phrase);
+        /* 括号变体 */
+        var m = phrase.match(/^(.*?)\s*[（(](.*?)[)）]/);
+        if (m) {
+            if (m[1]) add(m[1]);
+            if (m[1] && m[2]) add(m[1] + ' ' + m[2]);
+            if (m[2]) add(m[2]);
+            var rest = phrase.slice(m[0].length).trim();
+            if (m[2] && rest) add(m[2] + ' ' + rest);
+            if (m[1] && m[2] && rest) add(m[1] + ' ' + m[2] + ' ' + rest);
+        }
+        /* 斜杠变体 */
+        if (phrase.indexOf('/') >= 0) {
+            var parts = phrase.split(/\s*\/\s*/).filter(Boolean);
+            var i, a, b, lastTk;
+            for (i = 0; i < parts.length; i++) {
+                add(parts[i]);
+                var stem = parts[i].replace(/\s*[（(][^）)]*[)）]\s*$/, '');
+                if (stem && stem !== parts[i]) add(stem);
+                var rest2 = parts[i].split(/\s+/).slice(1).join(' ');
+                if (rest2) add(rest2);
+                lastTk = parts[i].split(/\s+/).pop();
+                if (lastTk && lastTk.length >= 3) add(lastTk);
+            }
+            for (i = 0; i < parts.length - 1; i++) {
+                a = parts[i].split(/\s+/); b = parts[i + 1].split(/\s+/);
+                if (!a.length || !b.length) continue;
+                add(a.join(' ') + ' ' + b[b.length - 1]);
+                add(a[a.length - 1] + ' ' + b[b.length - 1]);
+                if (a.length > 1) {
+                    add(a.slice(0, -1).join(' ') + ' ' + b[0]);
+                    add(a.slice(0, -1).join(' ') + ' ' + b.join(' '));
+                }
+                if (b.length > 1) add(a.join(' ') + ' ' + b.slice(1).join(' '));
+                /* 右侧剥离括号主干后共享组合：on the/one's way (to) → on one's way */
+                var stemB = parts[i + 1].replace(/\s*[（(][^）)]*[)）]\s*$/, '');
+                if (stemB && stemB !== parts[i + 1] && a.length > 1) {
+                    add(a.slice(0, -1).join(' ') + ' ' + stemB);
+                }
+            }
+        }
+        /* 动词首词单独变体：make a mistake → make（供时态变形匹配 made） */
+        var snapshot = variants.slice();
+        snapshot.forEach(function (v) {
+            if (v.indexOf(' ') < 0) return;
+            var w0 = v.split(/\s+/)[0].toLowerCase();
+            if (HL_VERB[w0]) add(w0);
+        });
+        /* 正则增强变体：... / sb. sth. / one's oneself / 首词动词时态 / a|an */
+        /* 锚点检查：去掉占位后必须存在实词锚，防止 'to sb.' / 'with sth.' / 纯占位词 生成宽泛正则误伤 */
+        function hasAnchor(v) {
+            var w0 = (v.split(/\s+/)[0] || '').toLowerCase();
+            if (HL_VERB[w0] || w0 === 'a') return true;
+            if (/one's|oneself/i.test(v)) return true;
+            if (v.indexOf('...') >= 0) {
+                var cnt = v.replace(/\.\.\./g, ' ').split(/\s+/).filter(Boolean).length;
+                if (cnt >= 2) return true;
+            }
+            return v.replace(/sb\.|sth\.|one's|oneself|\.\.\./gi, ' ')
+                    .replace(/[（()）\/]/g, ' ')
+                    .split(/\s+/)
+                    .some(function (w) {
+                        return w.length >= 3 && !HL_STOP[w.toLowerCase()] && /[a-z]/i.test(w);
+                    });
+        }
+        function needsRe(v) {
+            if (!hasAnchor(v)) return false;
+            if (/sb\.|sth\.|one's|oneself/i.test(v)) return true;
+            var w0 = (v.split(/\s+/)[0] || '').toLowerCase();
+            return !!HL_VERB[w0] || w0 === 'a' || v.indexOf('...') >= 0;
+        }
+        function enrich(s) {
+            return s
+                /* 冠词 a/an 代词化+量词+形容词容错：必须先于占位替换，否则会破坏 [a-z]+ 等正则语法 */
+                .replace(/\ba\b/gi, '(?:a|an|the|my|your|his|her|our|their|any|some|many|no)(?:[^.!?\\n]{0,12}?)')
+                .replace(/\ban\b/gi, '(?:an|a|the|my|your|his|her|our|their|any|some|many|no)(?:[^.!?\\n]{0,12}?)')
+                /* to do 结构：例句中 do 可能被实际动词替代（happen to do → happened to see；encourage sb. to do sth. → encourages Roddy to put up his hand） */
+                .replace(/\bto do\b/g, 'to (?:do|[a-z]+)')
+                .replace(/\x00SB\x00/g, '(?:him|her|them|us|me|you|it|sb\\.|someone|somebody|[A-Z][a-z]+)')
+                .replace(/\x00STH\x00/g, '(?:sth\\.|something|[a-z]+)')
+                .replace(/one's|oneself/gi, "(?:one's|oneself|my|myself|your|yourself|his|himself|her|herself|our|ourselves|their|themselves)")
+                /* 末尾名词复数容错：make up one's mind → made up their minds */
+                .replace(/([A-Za-z]{2,})$/, '$1(?:s|es)?');
+        }
+        function buildRe(v) {
+            var segs = v.split(/(\.\.\.)/g), esc = [];
+            for (var i = 0; i < segs.length; i++) {
+                var seg = segs[i];
+                if (!seg) { esc.push(''); continue; }
+                if (seg === '...') { esc.push('[\\s\\S]{0,25}?'); continue; }
+                var s2 = seg.replace(/sb\./g, '\x00SB\x00').replace(/sth\./g, '\x00STH\x00');
+                var e = enrich(escapeRegex(s2));
+                /* 省略号后的段加词边界，防止 add...to... 匹配到 too 里的 to */
+                if (i > 0 && segs[i - 1] === '...') e = '(?<!\\w)' + e + '(?!\\w)';
+                esc.push(e);
+            }
+            for (var j = 0; j < segs.length; j++) {
+                if (!segs[j] || segs[j] === '...') continue;
+                var words = segs[j].split(/\s+/);
+                var low = (words[0] || '').toLowerCase();
+                if (HL_VERB[low] || low === 'a') {
+                    var head = HL_VERB[low] ? '(?:' + HL_VERB[low] + ')' : '(?:a|an)';
+                    var restS = words.slice(1).join(' ');
+                    if (restS) {
+                        var r2 = restS.replace(/sb\./g, '\x00SB\x00').replace(/sth\./g, '\x00STH\x00');
+                        esc[j] = head + '(?:[^.!?\\n]{0,12}?)' + enrich(escapeRegex(r2));
+                    } else {
+                        esc[j] = head;
+                    }
+                }
+                break;
+            }
+            return esc.join('');
+        }
+        var reVariants = [];
+        variants.forEach(function (v) {
+            if (needsRe(v)) {
+                var r = buildRe(v);
+                if (r && r !== escapeRegex(v)) reVariants.push(r);
+            }
+        });
+        variants.sort(function (x, y) { return y.length - x.length; });
+        /* 每个变体两端加词边界，防止从单词中间匹配（became→ame、happened→happen、is house is located on） */
+        var all = variants.map(function (v) { return '(?<!\\w)' + escapeRegex(v) + '(?!\\w)'; })
+            .concat(reVariants.map(function (r) { return '(?<!\\w)' + r + '(?!\\w)'; }));
+        all.sort(function (x, y) { return y.length - x.length; });
+        if (!all.length) return example;
+        var re = new RegExp('(' + all.join('|') + ')', 'gi');
+        return example.replace(re, function (match) {
+            return '<span class="highlight">' + match + '</span>';
+        });
+    }
+
+    /* ============================================================
+       状态 & 持久化
+       ============================================================ */
+    var REVIEW_KEY = 'kz_review_v1';
+    var MODE_KEY = 'kz_mode_v1';
+    var TRANS_KEY = 'kz_trans_v1';
+
+    var DAY_C1 = '#6fa7dc', DAY_C2 = '#c6dcf4', DAY_CARD = '#f5faff';
+    var REVIEW_C1 = '#69a2da', REVIEW_C2 = '#c9def5', REVIEW_CARD = '#f3f9ff';
+    /* REVIEW 闪卡（GO 按钮）绿色系主题 */
+    var REVIEW_GO_C1 = '#6fae8e', REVIEW_GO_C2 = '#cde8d8', REVIEW_GO_CARD = '#f2faf5';
+
+    var current = { g: null, i: 0, dir: 'en2zh', mode: 'passage' }; // dir: en2zh | zh2en
+    var currentAudio = null;
+
+    function computeTextAccent(c1) {
+        return luminance(c1) < 0.55 ? c1 : mix(c1, '#2a3d5f', 0.55);
+    }
+
+    function loadJSON(key) {
+        try { return JSON.parse(localStorage.getItem(key)) || null; } catch (e) { return null; }
+    }
+    function saveJSON(key, val) {
+        try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+    }
+
+    function loadReview() {
+        var l = loadJSON(REVIEW_KEY);
+        return Array.isArray(l) ? l : [];
+    }
+    function saveReview(list) { saveJSON(REVIEW_KEY, list); }
+    function isInReview(phrase) { return loadReview().indexOf(phrase) >= 0; }
+    function addWord(phrase) {
+        var l = loadReview();
+        if (l.indexOf(phrase) < 0) { l.push(phrase); saveReview(l); }
+    }
+    function removeWord(phrase) {
+        saveReview(loadReview().filter(function (x) { return x !== phrase; }));
+    }
+
+    /* 例句中文翻译缓存 */
+    var transCache = loadJSON(TRANS_KEY) || {};
+    function saveTransCache() { saveJSON(TRANS_KEY, transCache); }
+
+    /* ============================================================
+       主题注入
+       ============================================================ */
+    function applyTheme(c1, c2, cardBg) {
+        var root = document.documentElement;
+        var textAccent = computeTextAccent(c1);
+        root.style.setProperty('--vc1', c1);
+        root.style.setProperty('--vc2', c2);
+        root.style.setProperty('--c1', c1);
+        root.style.setProperty('--c2', c2);
+        root.style.setProperty('--cardBg', cardBg);
+        root.style.setProperty('--accent', textAccent);
+        root.style.setProperty('--hint', mix(textAccent, '#ffffff', 0.55));
+        root.style.setProperty('--scroll', mix(c1, '#ffffff', 0.55));
+        root.style.setProperty('--glow', rgba(c1, 0.28));
+        root.style.setProperty('--label-bg', rgba(textAccent, 0.10));
+        root.style.setProperty('--speak-bg', rgba(textAccent, 0.10));
+        root.style.setProperty('--speak-border', rgba(textAccent, 0.18));
+        root.style.setProperty('--primary-solid', luminance(c1) < 0.55 ? c1 : mix(c1, '#2a3d5f', 0.62));
+    }
+
+    function setBg(bg, dot) {
+        /* 点阵背景：无参 = 白底蓝点（首页 / DAY 闪卡 / REVIEW 列表一致）；
+           传 bg = 该背景色 + 白色点阵（如 GO 复习闪卡的绿底白点） */
+        var d = dot || (bg ? 'rgba(255, 255, 255, 0.55)' : 'rgba(70, 130, 190, 0.30)');
+        var base = bg || '#ffffff';
+        var dots = 'radial-gradient(' + d + ' 1.6px, transparent 1.6px) 0 0 / 24px 24px';
+        var s = dots + ' fixed ' + base;
+        document.documentElement.style.background = s;
+        document.body.style.background = s;
+    }
+
+    /* ============================================================
+       例句翻译（MyMemory，懒加载 + 缓存）
+       ============================================================ */
+    function renderExample(d) {
+        var zh;
+        if (d.exampleZh) zh = d.exampleZh;
+        else if (d._loading) zh = '翻译加载中…';
+        else zh = '翻译加载中…';
+        var cls = d.exampleZh ? '' : ' style="opacity:.75"';
+        $('exampleDisplay').innerHTML =
+            '<span class="example-en">"' + highlightPhrase(d.example, d.phrase) + '"</span><br>' +
+            '<span class="example-zh"' + cls + '>' + zh + '</span>';
+    }
+    function ensureTranslation(d) {
+        if (d.exampleZh || d._loading) return;
+        if (transCache[d.example]) { d.exampleZh = transCache[d.example]; renderExample(d); return; }
+        d._loading = true;
+        renderExample(d);
+        var url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(d.example) + '&langpair=en|zh-CN';
+        fetch(url)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                d._loading = false;
+                var t = data && data.responseData && data.responseData.translatedText;
+                if (t) {
+                    d.exampleZh = t;
+                    transCache[d.example] = t;
+                    saveTransCache();
+                } else {
+                    d.exampleZh = '（暂无翻译）';
+                }
+                renderExample(d);
+            })
+            .catch(function () {
+                d._loading = false;
+                d.exampleZh = '（翻译失败，可重试）';
+                renderExample(d);
+            });
+    }
+
+    /* ============================================================
+       闪卡渲染
+       ============================================================ */
+    /* 正面词组字号自适应：按 canvas 实测宽度选择档位，避免窄屏省略号截断。
+       分档字号必须与 CSS 保持一致：
+         默认      clamp(40px,10vw,68px) + letter-spacing:1px
+                  （≤560px 断点覆盖为 46px，≤390px 覆盖为 38px）
+         long      clamp(24px,6vw,48px)
+         very-long clamp(18px,5vw,36px)
+       long/very-long 特异性高于断点覆盖，不受其影响。 */
+    function pickPhraseClass(text) {
+        var vw = window.innerWidth || 375;
+        var defSize = vw <= 390 ? 38 : (vw <= 560 ? 46 : Math.min(Math.max(vw * 0.10, 40), 68));
+        var cands = [
+            { cls: '', size: defSize },
+            { cls: 'long', size: Math.min(Math.max(vw * 0.06, 24), 48) },
+            { cls: 'very-long', size: Math.min(Math.max(vw * 0.05, 18), 36) }
+        ];
+        /* 可用宽度 = 面板宽 - panel 侧边距 - 卡片内边距 - 安全余量（与 CSS 断点一致） */
+        var bodyPad = vw <= 560 ? 24 : 32;
+        var shell = vw > 560 ? Math.min(vw - bodyPad, 700) : vw - bodyPad;
+        var panelPad = vw <= 390 ? 24 : (vw <= 560 ? 32 : 56);
+        var cardPad = vw <= 560 ? 36 : 52;
+        var avail = Math.max(200, shell - panelPad - cardPad - 6);
+        var c = document.createElement('canvas');
+        var ctx = c.getContext ? c.getContext('2d') : null;
+        if (!ctx) { /* 极端环境 canvas 不可用 → 保守字符数兜底（宁小勿截，阈值低于真实所需） */
+            var L = text.length;
+            return L > 20 ? 'very-long' : (L > 13 ? 'long' : '');
+        }
+        var font = '700 0px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif';
+        for (var i = 0; i < cands.length; i++) {
+            ctx.font = font.replace('0px', cands[i].size + 'px');
+            var w = ctx.measureText(text).width;
+            if (i === 0) w += (text.length - 1) * 1; /* 默认档 letter-spacing: 1px */
+            if (w <= avail) return cands[i].cls;
+        }
+        return 'very-long';
+    }
+
+    function renderCard() {
+        var p = current.p;
+        if (!p || !p.words || !p.words.length) return;
+        var d = p.words[current.i];
+        if (!d) return;
+        var isZh = current.dir === 'zh2en';
+
+        /* 正面：英译中显示词组；中译英显示中文释义 */
+        var frontText = isZh ? d.meaning : d.phrase;
+        $('wordDisplay').textContent = frontText;
+        $('wordDisplay').classList.toggle('zh', isZh);
+        $('wordDisplay').classList.remove('long', 'very-long');
+        if (!isZh) {
+            var wc = pickPhraseClass(d.phrase);
+            if (wc) $('wordDisplay').classList.add(wc);
+        }
+
+        /* 背面：英文词组（答案）+ 同义 + 释义 + 例句 */
+        $('backWord').parentElement.classList.toggle('zh', isZh);
+        $('backWord').textContent = d.phrase;
+        var synBox = $('synonymBox'), synDisp = $('synonymDisplay');
+        if (d.synonym) {
+            synBox.style.display = '';
+            synDisp.textContent = d.phrase + ' = ' + d.synonym;
+        } else {
+            synBox.style.display = 'none';
+        }
+        $('meaningDisplay').textContent = d.meaning;
+        renderExample(d);
+        ensureTranslation(d);
+
+        $('progressDisplay').textContent = (current.i + 1) + ' / ' + current.p.words.length;
+        $('flashcard').classList.remove('flipped');
+        updateAddBtn();
+    }
+
+    function goTo(i) {
+        var total = current.p.words.length;
+        if (i < 0) i = total - 1;
+        if (i >= total) i = 0;
+        current.i = i;
+        renderCard();
+    }
+    function next() { goTo(current.i + 1); }
+    function prev() { goTo(current.i - 1); }
+    function random() {
+        var total = current.p.words.length, n;
+        do { n = Math.floor(Math.random() * total); } while (n === current.i && total > 1);
+        goTo(n);
+    }
+
+    /* ============================================================
+       收藏
+       ============================================================ */
+    function updateAddBtn() {
+        var d = current.p.words[current.i];
+        var added = isInReview(d.phrase);
+        $('addBtn').classList.toggle('added', added);
+        $('addBtn').textContent = added ? '✓' : '+';
+        $('addBtn').setAttribute('aria-label', added ? '移出收藏' : '收藏词组');
+    }
+    function toggleReview() {
+        var d = current.p.words[current.i];
+        if (current.mode === 'review') {
+            /* 复习模式中取消收藏 → 直接从复习列表移除 */
+            removeWord(d.phrase);
+            var entries = loadReview().map(function (ph) { return findEntry(ph); }).filter(Boolean);
+            if (entries.length === 0) { location.hash = '#/review'; return; }
+            current.p.words = entries.map(function (e) { return e.data; });
+            if (current.i >= current.p.words.length) current.i = current.p.words.length - 1;
+            renderCard();
+        } else {
+            if (isInReview(d.phrase)) removeWord(d.phrase);
+            else addWord(d.phrase);
+            updateAddBtn();
+        }
+        updateBadges();
+    }
+    function updateBadges() {
+        var n = loadReview().length;
+        var el = $('reviewHomeCount');
+        if (el) el.textContent = n + ' 词组';
+        var c = $('reviewCount');
+        if (c) c.textContent = n;
+        var g = $('goBtn'), s = $('shareBtn');
+        if (g) g.classList.toggle('disabled', n === 0);
+        if (s) s.classList.toggle('disabled', n === 0);
+    }
+
+    /* 根据词组找到所在分组与组内索引 */
+    function findEntry(phrase) {
+        for (var gi = 0; gi < groups.length; gi++) {
+            for (var ii = 0; ii < groups[gi].cards.length; ii++) {
+                if (groups[gi].cards[ii].phrase === phrase) return { gi: gi, ii: ii, data: groups[gi].cards[ii] };
+            }
+        }
+        return null;
+    }
+
+    /* ============================================================
+       首页
+       ============================================================ */
+    function renderHome() {
+        $('statWords').textContent = CARDS.length;
+
+        var grid = $('dayGrid');
+        grid.innerHTML = '';
+
+        var reviewBtn = document.createElement('a');
+        reviewBtn.className = 'p-btn p-btn-review';
+        reviewBtn.href = '#/review';
+        reviewBtn.id = 'reviewHomeBtn';
+        reviewBtn.innerHTML =
+            '<span class="p-no">REVIEW</span>' +
+            '<span class="p-count" id="reviewHomeCount">0 词组</span>' +
+            '<span class="p-go">›</span>';
+        grid.appendChild(reviewBtn);
+
+        groups.forEach(function (g, idx) {
+            var btn = document.createElement('a');
+            btn.className = 'p-btn';
+            btn.href = '#/p/' + idx;
+            btn.innerHTML =
+                '<span class="p-no">' + g.name + '</span>' +
+                '<span class="p-count">' + g.cards.length + ' 词组</span>' +
+                '<span class="p-go">›</span>';
+            grid.appendChild(btn);
+        });
+
+        updateBadges();
+    }
+
+    /* ============================================================
+       视图 / 路由
+       ============================================================ */
+    function showView(name) {
+        ['homeView', 'passageView', 'reviewView'].forEach(function (v) {
+            $(v).classList.toggle('active', v === name);
+        });
+        window.scrollTo(0, 0);
+    }
+    function showHome() {
+        stopAudio();
+        document.body.className = 'home';
+        setBg();
+        renderHome();
+        showView('homeView');
+    }
+    function openPassage(gi, idx) {
+        var g = groups[gi];
+        if (!g) { showHome(); return; }
+        stopAudio();
+        current.g = gi;
+        current.i = typeof idx === 'number' && idx >= 0 ? idx : 0;
+        current.mode = 'passage';
+        current.p = { name: g.name, words: g.cards };
+        document.body.className = 'passage';
+        applyTheme(DAY_C1, DAY_C2, DAY_CARD);
+        setBg();
+        $('passageTitle').textContent = '📘 ' + g.name;
+        renderCard();
+        showView('passageView');
+    }
+    /* REVIEW 收藏词闪卡（GO 按钮） */
+    function openReviewFlash() {
+        var entries = loadReview().map(function (ph) { return findEntry(ph); }).filter(Boolean);
+        if (entries.length === 0) return;
+        stopAudio();
+        current.mode = 'review';
+        current.p = { name: 'REVIEW', words: entries.map(function (e) { return e.data; }) };
+        current.i = 0;
+        document.body.className = 'passage review-go';
+        applyTheme(REVIEW_GO_C1, REVIEW_GO_C2, REVIEW_GO_CARD);
+        setBg('#82a28f');  /* GO 复习闪卡：柔和绿底 + 白色点阵 */
+        $('passageTitle').textContent = '📘 REVIEW';
+        renderCard();
+        showView('passageView');
+    }
+    function openReview() {
+        stopAudio();
+        document.body.className = 'home';
+        setBg();
+        document.documentElement.style.setProperty('--accent', REVIEW_C1);
+        renderReview();
+        showView('reviewView');
+    }
+    function stopAudio() {
+        if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+        if ('speechSynthesis' in window) { try { speechSynthesis.cancel(); } catch (e) {} }
+    }
+    function route() {
+        var m = location.hash.match(/^#\/p\/(\d+)/);
+        if (m) openPassage(parseInt(m[1], 10));
+        else if (location.hash === '#/review') openReview();
+        else if (location.hash === '#/go') openReviewFlash();
+        else showHome();
+    }
+
+    /* ============================================================
+       REVIEW 页
+       ============================================================ */
+    function renderReview() {
+        var list = loadReview();
+        var wrap = $('reviewList'), empty = $('reviewEmpty');
+        wrap.innerHTML = '';
+        if (list.length === 0) {
+            empty.style.display = 'block';
+        } else {
+            empty.style.display = 'none';
+            list.forEach(function (ph) {
+                var e = findEntry(ph);
+                var item = document.createElement('div');
+                item.className = 'r-item';
+                if (e) {
+                    item.innerHTML =
+                        '<div class="r-info">' +
+                            '<div class="r-word">' + e.data.phrase +
+                                '<span class="r-tag">' + groups[e.gi].name + '</span>' +
+                            '</div>' +
+                            '<div class="r-meaning">' + e.data.meaning + '</div>' +
+                        '</div>';
+                    item.addEventListener('click', function () {
+                        openPassage(e.gi, e.ii);
+                    });
+                } else {
+                    item.innerHTML = '<div class="r-info"><div class="r-word">' + ph + '</div></div>';
+                }
+                var del = document.createElement('button');
+                del.className = 'r-del';
+                del.textContent = '−';
+                del.setAttribute('aria-label', '移出收藏');
+                del.addEventListener('click', function (ev) {
+                    ev.stopPropagation();
+                    removeWord(ph);
+                    renderReview();
+                    updateBadges();
+                });
+                item.appendChild(del);
+                wrap.appendChild(item);
+            });
+        }
+        updateBadges();
+    }
+
+    /* ============================================================
+       REVIEW 导出
+       ============================================================ */
+    function buildReviewTxt() {
+        var list = loadReview();
+        var lines = [];
+        lines.push('初中考纲词组 · REVIEW 收藏（共 ' + list.length + ' 个）');
+        lines.push('导出时间：' + new Date().toLocaleString('zh-CN'));
+        lines.push('----------------------------------------');
+        lines.push('');
+        list.forEach(function (ph) {
+            var e = findEntry(ph);
+            if (!e) return;
+            lines.push('【' + e.data.phrase + '】');
+            lines.push('释义：' + e.data.meaning);
+            if (e.data.example) {
+                lines.push('例句：' + e.data.example + (e.data.exampleZh ? '  ——  ' + e.data.exampleZh : ''));
+            }
+            lines.push('');
+        });
+        return lines.join('\n');
+    }
+    function exportReview() {
+        var list = loadReview();
+        if (list.length === 0) {
+            try { alert('还没有收藏词组，先在闪卡右上角点「+」收藏吧'); } catch (e) {}
+            return;
+        }
+        var content = '\ufeff' + buildReviewTxt();
+        var file = new File([content], 'REVIEW词组_' + list.length + '个.txt', { type: 'text/plain;charset=utf-8' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({
+                files: [file],
+                title: 'REVIEW 收藏词组',
+                text: '共 ' + list.length + ' 个中考高频词组'
+            }).catch(function () {});
+        } else {
+            var url = URL.createObjectURL(file);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'REVIEW词组_' + list.length + '个.txt';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 200);
+        }
+    }
+
+    /* ============================================================
+       发音（有道 HTTPS + 系统语音兜底）
+       ============================================================ */
+    function speakWord(word) {
+        if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+        try {
+            var audio = new Audio('https://dict.youdao.com/dictvoice?type=1&audio=' + encodeURIComponent(word));
+            currentAudio = audio;
+            audio.play().catch(function () {
+                currentAudio = null;
+                fallbackSpeak(word);
+            });
+        } catch (e) {
+            fallbackSpeak(word);
+        }
+    }
+    function fallbackSpeak(word) {
+        try {
+            if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
+                var u = new SpeechSynthesisUtterance(word);
+                u.lang = 'en-US';
+                u.rate = 0.85;
+                speechSynthesis.speak(u);
+            }
+        } catch (e) {}
+    }
+
+    /* ============================================================
+       模式切换
+       ============================================================ */
+    function setDir(dir) {
+        current.dir = (dir === 'zh2en') ? 'zh2en' : 'en2zh';
+        saveJSON(MODE_KEY, current.dir);
+        document.querySelectorAll('.ms-btn').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.dir === current.dir);
+        });
+        renderCard();
+    }
+
+    /* ============================================================
+       事件绑定
+       ============================================================ */
+    window.addEventListener('hashchange', route);
+
+    $('backBtn').addEventListener('click', function () {
+        location.hash = current.mode === 'review' ? '#/review' : '#/';
+    });
+    $('reviewBackBtn').addEventListener('click', function () { location.hash = '#/'; });
+    $('goBtn').addEventListener('click', function () {
+        if (loadReview().length === 0) return;
+        location.hash = '#/go';
+    });
+    $('shareBtn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        exportReview();
+    });
+
+    document.querySelectorAll('.ms-btn').forEach(function (b) {
+        b.addEventListener('click', function () { setDir(b.dataset.dir); });
+    });
+
+    /* 禁止双指/双击缩放 */
+    document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+    document.addEventListener('gesturechange', function (e) { e.preventDefault(); });
+    document.addEventListener('gestureend', function (e) { e.preventDefault(); });
+
+    $('addBtn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggleReview();
+    });
+    $('flashcard').addEventListener('click', function (e) {
+        if (e.target.closest && (e.target.closest('#speakBtn') || e.target.closest('#addBtn'))) return;
+        this.classList.toggle('flipped');
+    });
+    $('speakBtn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        speakWord(current.p.words[current.i].phrase);
+    });
+    $('prevBtn').addEventListener('click', prev);
+    $('nextBtn').addEventListener('click', next);
+    $('randomBtn').addEventListener('click', random);
+
+    document.addEventListener('keydown', function (e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (document.body.className !== 'passage') return;
+        if (e.key === 'ArrowRight') { e.preventDefault(); next(); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+        else if (e.key === 'r' || e.key === 'R') { e.preventDefault(); random(); }
+        else if (e.key === ' ' || e.key === 'Space') { e.preventDefault(); speakWord(current.p.words[current.i].phrase); }
+        else if (e.key === 'Escape') { location.hash = current.mode === 'review' ? '#/review' : '#/'; }
+    });
+
+    /* ============================================================
+       初始化
+       ============================================================ */
+    /* 启动：任何一步失败都兜底渲染首页按钮，绝不出现"只有标题" */
+    function boot() {
+        /* ① 先渲染首页按钮（最高优先级，任何失败不影响按钮出现） */
+        try { renderHome(); } catch (e) { console.error('renderHome:', e); }
+        /* ② 恢复上次模式（放在首页渲染之后：即使失败也不影响按钮） */
+        try {
+            var savedDir = loadJSON(MODE_KEY);
+            if (savedDir === 'zh2en' || savedDir === 'en2zh') setDir(savedDir);
+        } catch (e) { console.error('restore mode:', e); }
+        /* ③ 路由 */
+        try {
+            route();
+        } catch (e) {
+            console.error('route:', e);
+            try {
+                document.body.className = 'home';
+                setBg();
+                renderHome();
+                showView('homeView');
+            } catch (e2) { console.error('fallback:', e2); }
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot);
+    } else {
+        boot();
+    }
+
+    /* Service Worker：仅在 HTTPS / localhost 注册，file:// 下静默跳过 */
+    if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('sw.js').catch(function (err) {
+                console.warn('SW 注册失败:', err);
+            });
+        });
+    }
+})();
+</script>
+</body>
+</html>
