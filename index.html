@@ -262,10 +262,22 @@
     }
     .card-front .word.long { font-size: clamp(28px, 7vw, 52px); letter-spacing: 0; }
     .card-front .word.very-long { font-size: clamp(24px, 6.2vw, 48px); letter-spacing: 0; white-space: normal; }
-    /* 中译英模式：正面是中文释义，字号适当缩小 */
+    /* 中译英模式：正面是中文释义，字号适当缩小；允许换行，绝不 ellipsis 截断 */
     .card-front .word.zh {
         font-size: clamp(28px, 6.5vw, 46px);
         line-height: 1.4;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        letter-spacing: 0;
+    }
+    /* 中文超长兜底档：降字号 + 仍可换行（与英文 very-long 同思路） */
+    .card-front .word.zh-long {
+        font-size: clamp(22px, 5.2vw, 34px);
+        line-height: 1.4;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
     }
     .card-front .speak-btn {
         margin-top: 8px;
@@ -309,6 +321,7 @@
     }
 
     .card-back { transform: rotateY(180deg); align-items: flex-start; text-align: left; gap: 7px; }
+    /* 背面：英文词组缩小为标签式提示 */
     .card-back .back-word { font-size: 16.5px; font-weight: 600; color: #5b7899; margin-bottom: 2px; }
     /* 背面：中文释义放大加粗并居中 */
     .card-back .detail .content#meaningDisplay {
@@ -453,6 +466,7 @@
         .card-face { padding: 22px 18px; }
         .card-front .word { font-size: 46px; }
         .card-front .word.zh { font-size: 30px; }
+        .card-front .word.zh-long { font-size: 22px; }
         .card-back .detail .content { font-size: 14px; }
         .nav button { width: 42px; height: 42px; font-size: 16px; }
         .nav button.primary { width: auto; padding: 0 16px; }
@@ -469,6 +483,7 @@
         .panel { border-radius: 26px; padding: 18px 12px 24px; }
         .card-front .word { font-size: 38px; }
         .card-front .word.zh { font-size: 26px; }
+        .card-front .word.zh-long { font-size: 20px; }
         .nav button { width: 38px; height: 38px; font-size: 15px; }
         .nav button.primary { width: auto; padding: 0 14px; }
         .ms-btn { padding: 6px 14px; font-size: 13px; }
@@ -1137,7 +1152,7 @@
 
     var DAY_C1 = '#6fa7dc', DAY_C2 = '#c6dcf4', DAY_CARD = '#f5faff';
     var REVIEW_C1 = '#69a2da', REVIEW_C2 = '#c9def5', REVIEW_CARD = '#f3f9ff';
-    /* REVIEW 闪卡（GO 按钮）绿色系主题 */
+    /* REVIEW 闪卡（GO 按钮）绿色系主题；GO 卡片纯白（用户反馈 #f2faf5 偏灰） */
     var REVIEW_GO_C1 = '#6fae8e', REVIEW_GO_C2 = '#cde8d8', REVIEW_GO_CARD = '#f2faf5';
 
     var current = { g: null, i: 0, dir: 'en2zh', mode: 'passage' }; // dir: en2zh | zh2en
@@ -1284,6 +1299,27 @@
         return 'very-long';
     }
 
+    /* 中译英正面中文释义选档：默认 .zh（clamp(28px,6.5vw,46px)，断点覆盖 30/26）；
+       超宽降为 .zh-long（clamp(22px,5.2vw,34px)，断点覆盖 22/20）；
+       仍超宽也返回 zh-long —— 中文始终 white-space:normal，靠换行保证完整显示，绝不截断 */
+    function pickZhClass(text) {
+        var vw = window.innerWidth || 375;
+        var zhSize = vw <= 390 ? 26 : (vw <= 560 ? 30 : Math.min(Math.max(vw * 0.065, 28), 46));
+        var zhLongSize = vw <= 390 ? 20 : (vw <= 560 ? 22 : Math.min(Math.max(vw * 0.052, 22), 34));
+        var bodyPad = vw <= 560 ? 24 : 32;
+        var shell = vw > 560 ? Math.min(vw - bodyPad, 700) : vw - bodyPad;
+        var panelPad = vw <= 390 ? 24 : (vw <= 560 ? 32 : 56);
+        var cardPad = vw <= 560 ? 36 : 52;
+        var avail = Math.max(200, shell - panelPad - cardPad - 6);
+        var c = document.createElement('canvas');
+        var ctx = c.getContext ? c.getContext('2d') : null;
+        if (!ctx) return text.length > 12 ? 'zh-long' : '';
+        var font = '700 0px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif';
+        ctx.font = font.replace('0px', zhSize + 'px');
+        if (ctx.measureText(text).width <= avail) return '';
+        return 'zh-long';
+    }
+
     function renderCard() {
         var p = current.p;
         if (!p || !p.words || !p.words.length) return;
@@ -1295,10 +1331,13 @@
         var frontText = isZh ? d.meaning : d.phrase;
         $('wordDisplay').textContent = frontText;
         $('wordDisplay').classList.toggle('zh', isZh);
-        $('wordDisplay').classList.remove('long', 'very-long');
+        $('wordDisplay').classList.remove('long', 'very-long', 'zh-long');
         if (!isZh) {
             var wc = pickPhraseClass(d.phrase);
             if (wc) $('wordDisplay').classList.add(wc);
+        } else {
+            var zc = pickZhClass(d.meaning);
+            if (zc) $('wordDisplay').classList.add(zc);
         }
 
         /* 背面：英文词组（答案）+ 同义 + 释义 + 例句 */
@@ -1697,15 +1736,6 @@
         document.addEventListener('DOMContentLoaded', boot);
     } else {
         boot();
-    }
-
-    /* Service Worker：仅在 HTTPS / localhost 注册，file:// 下静默跳过 */
-    if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
-        window.addEventListener('load', function () {
-            navigator.serviceWorker.register('sw.js').catch(function (err) {
-                console.warn('SW 注册失败:', err);
-            });
-        });
     }
 })();
 </script>
