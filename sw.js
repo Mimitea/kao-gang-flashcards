@@ -1,6 +1,6 @@
 /* Service Worker：离线缓存核心资源，仅 HTTPS/localhost 生效 */
 'use strict';
-var CACHE = 'kz-cards-v1';
+var CACHE = 'kz-cards-v2';
 var ASSETS = [
   './',
   './index.html',
