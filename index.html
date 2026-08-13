@@ -323,6 +323,20 @@
     .card-back { transform: rotateY(180deg); align-items: flex-start; text-align: left; gap: 7px; }
     /* 背面：英文词组缩小为标签式提示 */
     .card-back .back-word { font-size: 16.5px; font-weight: 600; color: #5b7899; margin-bottom: 2px; }
+    /* 背面发音按钮：仅在中译英翻转面显示，居中放大（复用正面样式语言） */
+    .card-back .speak-btn-back { display: none; }
+    .card-back.zh .speak-btn-back {
+        align-self: center;
+        background: #ffffff;
+        border: 1px solid rgba(63, 123, 184, 0.55);
+        border-radius: 60px; padding: 10px 26px;
+        font-size: 17px; font-weight: 600; color: #1d4e80;
+        display: inline-flex; align-items: center; gap: 10px; cursor: pointer;
+        transition: transform .18s ease, background .2s ease;
+        margin: 2px 0 8px;
+    }
+    .card-back.zh .speak-btn-back:active { transform: scale(0.94); }
+    .card-back.zh .speak-btn-back svg { width: 22px; height: 22px; fill: currentColor; }
     /* 背面：中文释义放大加粗并居中 */
     .card-back .detail .content#meaningDisplay {
         font-size: clamp(22px, 6.2vw, 30px);
@@ -489,6 +503,7 @@
         .nav { gap: 8px; }
         .card-front .flip-hint, .card-back .flip-hint-back { bottom: 10px; right: 18px; }
         .card-front .speak-btn { padding: 8px 18px; font-size: 15px; }
+        .card-back.zh .speak-btn-back { padding: 8px 18px; font-size: 15px; }
         .header { margin-bottom: 12px; }
         .mode-switch { margin-bottom: 12px; }
         .ms-btn { padding: 7px 18px; font-size: 13.5px; }
@@ -565,6 +580,7 @@
                 </div>
                 <div class="card-face card-back">
                     <div class="back-word" id="backWord">a bit (of)</div>
+                    <button class="speak-btn-back" id="speakBtnBack" aria-label="发音"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button>
                     <div class="detail" id="synonymBox" style="display:none;">
                         <div class="label">同义</div>
                         <div class="content" id="synonymDisplay"></div>
@@ -1177,6 +1193,7 @@
 
     var current = { g: null, i: 0, dir: 'en2zh', mode: 'passage' }; // dir: en2zh | zh2en
     var currentAudio = null;
+    var currentTimeout = null;
 
     function computeTextAccent(c1) {
         return luminance(c1) < 0.55 ? c1 : mix(c1, '#2a3d5f', 0.55);
@@ -1649,19 +1666,39 @@
     }
 
     /* ============================================================
-       发音（有道 HTTPS + 系统语音兜底）
+       发音（有道 HTTPS 女声 + 系统语音女声兜底）
        ============================================================ */
+    function cleanForTTS(word) {
+        return word
+            .replace(/\s*\/\s*/g, ' or ')   // 斜杠 → or（by bus/train/plane → by bus or train or plane）
+            .replace(/\.{2,}/g, ' ')         // ... → 空格（prefer...to → prefer to）
+            .replace(/…/g, ' ')              // Unicode省略号 → 空格
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
     function speakWord(word) {
         if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+        if (currentTimeout) { clearTimeout(currentTimeout); currentTimeout = null; }
+        var cleaned = cleanForTTS(word);
         try {
-            var audio = new Audio('https://dict.youdao.com/dictvoice?type=1&audio=' + encodeURIComponent(word));
+            var audio = new Audio('https://dict.youdao.com/dictvoice?type=0&audio=' + encodeURIComponent(cleaned));
             currentAudio = audio;
-            audio.play().catch(function () {
+            var done = false;
+            function onFail() {
+                if (done) return; done = true;
+                if (currentTimeout) { clearTimeout(currentTimeout); currentTimeout = null; }
                 currentAudio = null;
-                fallbackSpeak(word);
+                fallbackSpeak(cleaned);
+            }
+            audio.addEventListener('error', onFail);
+            audio.addEventListener('playing', function () {
+                if (currentTimeout) { clearTimeout(currentTimeout); currentTimeout = null; }
             });
+            audio.play().catch(onFail);
+            // 超时兜底：3秒未开始播放则切系统语音
+            currentTimeout = setTimeout(onFail, 3000);
         } catch (e) {
-            fallbackSpeak(word);
+            fallbackSpeak(cleaned);
         }
     }
     function fallbackSpeak(word) {
@@ -1670,7 +1707,13 @@
                 speechSynthesis.cancel();
                 var u = new SpeechSynthesisUtterance(word);
                 u.lang = 'en-US';
-                u.rate = 0.85;
+                u.rate = 0.9;
+                var voices = speechSynthesis.getVoices();
+                var preferred = voices.find(function (v) {
+                    return v.lang === 'en-US' && /samantha|victoria|karen|tessa|aria|jenny|zira|zoe|google/i.test(v.name);
+                });
+                if (!preferred) preferred = voices.find(function (v) { return v.lang === 'en-US'; });
+                if (preferred) u.voice = preferred;
                 speechSynthesis.speak(u);
             }
         } catch (e) {}
@@ -1720,10 +1763,14 @@
         toggleReview();
     });
     $('flashcard').addEventListener('click', function (e) {
-        if (e.target.closest && (e.target.closest('#speakBtn') || e.target.closest('#addBtn'))) return;
+        if (e.target.closest && (e.target.closest('#speakBtn') || e.target.closest('#speakBtnBack') || e.target.closest('#addBtn'))) return;
         this.classList.toggle('flipped');
     });
     $('speakBtn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        speakWord(current.p.words[current.i].phrase);
+    });
+    $('speakBtnBack').addEventListener('click', function (e) {
         e.stopPropagation();
         speakWord(current.p.words[current.i].phrase);
     });
